@@ -486,6 +486,39 @@
     color: var(--muted);
     margin-top: 2px;
   }
+
+  /* Periodo mygtukai */
+  .period-btns {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .period-btn {
+    padding: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 1px;
+  }
+
+  .period-btn:hover {
+    border-color: var(--accent1);
+    color: var(--accent1);
+  }
+
+  .period-btn.active {
+    background: rgba(0,212,255,0.1);
+    border-color: var(--accent1);
+    color: var(--accent1);
+  }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
@@ -595,13 +628,21 @@
 
   <!-- GRAFIKAI -->
   <div style="margin-top: 24px; animation: fadeUp 0.6s ease 0.5s both;">
-    <div class="section-label">📈 Istorija (24h)</div>
+    <div class="section-label">📈 Istorija</div>
+
+    <!-- Periodo pasirinkimas -->
+    <div class="period-btns">
+      <button class="period-btn active" onclick="setPeriod(60, this)">1H</button>
+      <button class="period-btn" onclick="setPeriod(360, this)">6H</button>
+      <button class="period-btn" onclick="setPeriod(1440, this)">24H</button>
+      <button class="period-btn" onclick="setPeriod(4320, this)">3D</button>
+    </div>
 
     <!-- Temperatūros grafikas -->
     <div class="chart-card temp-chart">
       <div class="chart-title">
         🌡️ Temperatūra
-        <span class="period">PASKUTINĖS 24H</span>
+        <span class="period" id="tempPeriodLabel">PASKUTINĖ 1H</span>
       </div>
       <div class="chart-container">
         <canvas id="tempChart"></canvas>
@@ -626,7 +667,7 @@
     <div class="chart-card humi-chart">
       <div class="chart-title">
         💧 Drėgmė
-        <span class="period">PASKUTINĖS 24H</span>
+        <span class="period" id="humiPeriodLabel">PASKUTINĖ 1H</span>
       </div>
       <div class="chart-container">
         <canvas id="humiChart"></canvas>
@@ -760,6 +801,74 @@ const humiChart = new Chart(humiCtx, {
   options: chartOptions('%')
 });
 
+// Aktyvus periodas
+let currentResults = 60;
+
+const periodLabels = {
+  60: 'PASKUTINĖ 1H',
+  360: 'PASKUTINĖS 6H',
+  1440: 'PASKUTINĖS 24H',
+  4320: 'PASKUTINĖS 3D'
+};
+
+function setPeriod(results, btn) {
+  currentResults = results;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const label = periodLabels[results] || '';
+  document.getElementById('tempPeriodLabel').textContent = label;
+  document.getElementById('humiPeriodLabel').textContent = label;
+  fetchCharts();
+}
+
+async function fetchCharts() {
+  try {
+    const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=${currentResults}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const feeds = data.feeds || [];
+
+    const labels = [], vTemps = [], vHumis = [], lTemps = [], lHumis = [];
+    feeds.forEach(f => {
+      const t = new Date(f.created_at);
+      const label = currentResults <= 360
+        ? t.toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'})
+        : t.toLocaleDateString('lt-LT', {month:'2-digit', day:'2-digit'}) + ' ' + t.toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'});
+      labels.push(label);
+      vTemps.push(f.field1 ? parseFloat(f.field1) : null);
+      vHumis.push(f.field2 ? parseFloat(f.field2) : null);
+      lTemps.push(f.field3 ? parseFloat(f.field3) : null);
+      lHumis.push(f.field4 ? parseFloat(f.field4) : null);
+    });
+
+    tempChart.data.labels = labels;
+    tempChart.data.datasets[0].data = vTemps;
+    tempChart.data.datasets[1].data = lTemps;
+    tempChart.update();
+
+    humiChart.data.labels = labels;
+    humiChart.data.datasets[0].data = vHumis;
+    humiChart.data.datasets[1].data = lHumis;
+    humiChart.update();
+
+    // Statistika temperatūra
+    const validVT = vTemps.filter(v => v !== null);
+    if (validVT.length) {
+      document.getElementById('tempMin').textContent = Math.min(...validVT).toFixed(1) + '°';
+      document.getElementById('tempMax').textContent = Math.max(...validVT).toFixed(1) + '°';
+      document.getElementById('tempAvg').textContent = (validVT.reduce((a,b)=>a+b,0)/validVT.length).toFixed(1) + '°';
+    }
+
+    // Statistika drėgmė
+    const validVH = vHumis.filter(v => v !== null);
+    if (validVH.length) {
+      document.getElementById('humiMin').textContent = Math.min(...validVH).toFixed(0) + '%';
+      document.getElementById('humiMax').textContent = Math.max(...validVH).toFixed(0) + '%';
+      document.getElementById('humiAvg').textContent = (validVH.reduce((a,b)=>a+b,0)/validVH.length).toFixed(0) + '%';
+    }
+  } catch(e) { console.error('Chart klaida:', e); }
+}
+
 async function fetchData() {
   const btn = document.getElementById('refreshBtn');
   btn.textContent = '↻  Kraunama...';
@@ -767,13 +876,11 @@ async function fetchData() {
   document.getElementById('statusText').textContent = 'Atnaujinama...';
 
   try {
-    const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=100`;
+    const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=8`;
     const res = await fetch(url);
     const data = await res.json();
-
     const feeds = data.feeds || [];
 
-    // Paskutinė ne-null reikšmė
     const getLatest = (field) => {
       for (let i = feeds.length - 1; i >= 0; i--) {
         if (feeds[i][field] !== null && feeds[i][field] !== undefined) {
@@ -788,22 +895,16 @@ async function fetchData() {
     const lT = getLatest('field3');
     const lH = getLatest('field4');
 
-    // Vidus
     document.getElementById('vidTemp').textContent = isNaN(vT) ? '--' : vT.toFixed(1);
     document.getElementById('vidHumi').textContent = isNaN(vH) ? '--%' : vH.toFixed(1) + '%';
     document.getElementById('vidHumiBar').style.width = isNaN(vH) ? '0%' : vH + '%';
-
-    // Laukas
     document.getElementById('laukTemp').textContent = isNaN(lT) ? '--' : lT.toFixed(1);
     document.getElementById('laukHumi').textContent = isNaN(lH) ? '--%' : lH.toFixed(1) + '%';
     document.getElementById('laukHumiBar').style.width = isNaN(lH) ? '0%' : lH + '%';
 
-    // Palyginimas
     const maxT = Math.max(Math.abs(vT||0), Math.abs(lT||0), 40);
-    const pctVT = Math.min(100, (Math.abs(vT||0) / maxT) * 100);
-    const pctLT = Math.min(100, (Math.abs(lT||0) / maxT) * 100);
-    document.getElementById('cbarVidTemp').style.width = pctVT + '%';
-    document.getElementById('cbarLaukTemp').style.width = pctLT + '%';
+    document.getElementById('cbarVidTemp').style.width = Math.min(100, (Math.abs(vT||0)/maxT)*100) + '%';
+    document.getElementById('cbarLaukTemp').style.width = Math.min(100, (Math.abs(lT||0)/maxT)*100) + '%';
     document.getElementById('cbarVidHumi').style.width = (vH||0) + '%';
     document.getElementById('cbarLaukHumi').style.width = (lH||0) + '%';
     document.getElementById('cvalVidTemp').textContent = isNaN(vT) ? '--°' : vT.toFixed(1) + '°';
@@ -811,48 +912,6 @@ async function fetchData() {
     document.getElementById('cvalVidHumi').textContent = isNaN(vH) ? '--%' : vH.toFixed(0) + '%';
     document.getElementById('cvalLaukHumi').textContent = isNaN(lH) ? '--%' : lH.toFixed(0) + '%';
 
-    // GRAFIKAI – paruošti duomenis
-    const labels = [], vTemps = [], vHumis = [], lTemps = [], lHumis = [];
-
-    feeds.forEach(f => {
-      const t = new Date(f.created_at);
-      const label = t.toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'});
-      labels.push(label);
-      vTemps.push(f.field1 ? parseFloat(f.field1) : null);
-      vHumis.push(f.field2 ? parseFloat(f.field2) : null);
-      lTemps.push(f.field3 ? parseFloat(f.field3) : null);
-      lHumis.push(f.field4 ? parseFloat(f.field4) : null);
-    });
-
-    // Atnaujinti temperatūros grafiką
-    tempChart.data.labels = labels;
-    tempChart.data.datasets[0].data = vTemps;
-    tempChart.data.datasets[1].data = lTemps;
-    tempChart.update();
-
-    // Atnaujinti drėgmės grafiką
-    humiChart.data.labels = labels;
-    humiChart.data.datasets[0].data = vHumis;
-    humiChart.data.datasets[1].data = lHumis;
-    humiChart.update();
-
-    // Statistika – temperatūra (vidaus)
-    const validVT = vTemps.filter(v => v !== null);
-    if (validVT.length) {
-      document.getElementById('tempMin').textContent = Math.min(...validVT).toFixed(1) + '°';
-      document.getElementById('tempMax').textContent = Math.max(...validVT).toFixed(1) + '°';
-      document.getElementById('tempAvg').textContent = (validVT.reduce((a,b)=>a+b,0)/validVT.length).toFixed(1) + '°';
-    }
-
-    // Statistika – drėgmė (vidaus)
-    const validVH = vHumis.filter(v => v !== null);
-    if (validVH.length) {
-      document.getElementById('humiMin').textContent = Math.min(...validVH).toFixed(0) + '%';
-      document.getElementById('humiMax').textContent = Math.max(...validVH).toFixed(0) + '%';
-      document.getElementById('humiAvg').textContent = (validVH.reduce((a,b)=>a+b,0)/validVH.length).toFixed(0) + '%';
-    }
-
-    // Laikas
     const now = new Date();
     document.getElementById('lastUpdate').textContent =
       now.toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'});
@@ -867,9 +926,11 @@ async function fetchData() {
   btn.style.opacity = '1';
 }
 
-// Auto atnaujinimas kas 30 sek
+// Paleisti
 fetchData();
+fetchCharts();
 setInterval(fetchData, 30000);
+setInterval(fetchCharts, 60000);
 </script>
 </body>
 </html>
