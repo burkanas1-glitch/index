@@ -8,6 +8,7 @@
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root {
     --bg: #0a0e1a;
@@ -30,12 +31,11 @@
     overflow-x: hidden;
   }
 
-  /* Animated background grid */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
-    background-image: 
+    background-image:
       linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
       linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
     background-size: 40px 40px;
@@ -51,7 +51,6 @@
     padding: 24px 16px;
   }
 
-  /* Header */
   header {
     display: flex;
     justify-content: space-between;
@@ -69,12 +68,7 @@
     margin-bottom: 4px;
   }
 
-  h1 {
-    font-size: 28px;
-    font-weight: 800;
-    line-height: 1;
-    color: var(--text);
-  }
+  h1 { font-size: 28px; font-weight: 800; line-height: 1; color: var(--text); }
 
   .status {
     display: flex;
@@ -87,8 +81,7 @@
   }
 
   .dot {
-    width: 6px;
-    height: 6px;
+    width: 6px; height: 6px;
     border-radius: 50%;
     background: var(--accent3);
     animation: pulse 2s infinite;
@@ -101,7 +94,6 @@
     text-align: right;
   }
 
-  /* Section labels */
   .section-label {
     font-family: 'Space Mono', monospace;
     font-size: 10px;
@@ -121,7 +113,6 @@
     background: var(--border);
   }
 
-  /* Cards */
   .card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -141,25 +132,8 @@
   .card.vidus::before { background: linear-gradient(90deg, var(--accent1), transparent); }
   .card.lauke::before { background: linear-gradient(90deg, var(--accent2), transparent); }
 
-  /* Main temperature display */
-  .main-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 12px;
-    animation: fadeUp 0.6s ease 0.1s both;
-  }
-
-  .temp-display {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .temp-icon {
-    font-size: 28px;
-    margin-bottom: 4px;
-  }
+  .temp-display { display: flex; flex-direction: column; gap: 4px; }
+  .temp-icon { font-size: 28px; margin-bottom: 4px; }
 
   .temp-value {
     font-family: 'Space Mono', monospace;
@@ -170,9 +144,7 @@
     transition: all 0.5s ease;
   }
 
-  .card.lauke .temp-value {
-    color: var(--accent2);
-  }
+  .card.lauke .temp-value { color: var(--accent2); }
 
   .temp-unit {
     font-size: 20px;
@@ -188,7 +160,6 @@
     letter-spacing: 1px;
   }
 
-  /* Humidity bar */
   .humi-section {
     margin-top: 16px;
     padding-top: 16px;
@@ -217,16 +188,9 @@
     transition: all 0.5s ease;
   }
 
-  .card.lauke .humi-value {
-    color: var(--accent2);
-  }
+  .card.lauke .humi-value { color: var(--accent2); }
 
-  .humi-bar {
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
+  .humi-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
 
   .humi-fill {
     height: 100%;
@@ -235,190 +199,9 @@
     transition: width 1s ease;
   }
 
-  .card.lauke .humi-fill {
-    background: var(--accent2);
-  }
+  .card.lauke .humi-fill { background: var(--accent2); }
 
-  /* Feels like / extra info */
-  .extra-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border);
-  }
-
-  .extra-item {
-    text-align: center;
-  }
-
-  .extra-val {
-    font-family: 'Space Mono', monospace;
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  .extra-lbl {
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    color: var(--muted);
-    margin-top: 2px;
-    letter-spacing: 0.5px;
-  }
-
-  /* Mini chart */
-  .chart-section {
-    margin-top: 24px;
-    animation: fadeUp 0.6s ease 0.3s both;
-  }
-
-  .chart-wrap {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
-  }
-
-  canvas {
-    width: 100% !important;
-    height: 120px !important;
-  }
-
-  /* Comparison bar */
-  .compare-section {
-    margin-top: 24px;
-    animation: fadeUp 0.6s ease 0.4s both;
-  }
-
-  .compare-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
-  }
-
-  .compare-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-
-  .compare-row:last-child { margin-bottom: 0; }
-
-  .compare-lbl {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    width: 50px;
-    flex-shrink: 0;
-  }
-
-  .compare-bars {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .cbar {
-    height: 6px;
-    border-radius: 3px;
-    transition: width 1s ease;
-    position: relative;
-  }
-
-  .cbar.vidus { background: var(--accent1); opacity: 0.9; }
-  .cbar.lauke { background: var(--accent2); opacity: 0.9; }
-
-  .compare-val {
-    font-family: 'Space Mono', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    width: 45px;
-    text-align: right;
-    flex-shrink: 0;
-  }
-
-  /* Legend */
-  .legend {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-  }
-
-  .legend-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-  }
-
-  /* Refresh button */
-  .refresh-btn {
-    width: 100%;
-    margin-top: 24px;
-    padding: 14px;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    color: var(--accent1);
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 2px;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: all 0.3s ease;
-    animation: fadeUp 0.6s ease 0.5s both;
-  }
-
-  .refresh-btn:hover {
-    background: rgba(0,212,255,0.05);
-    border-color: var(--accent1);
-  }
-
-  .refresh-btn:active { transform: scale(0.98); }
-
-  /* Loading state */
-  .loading .temp-value,
-  .loading .humi-value {
-    color: var(--muted) !important;
-  }
-
-  /* Animations */
-  @keyframes fadeDown {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.8); }
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  .spinning { animation: spin 1s linear infinite; }
-
+  /* Grafiko kortelė */
   .chart-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -436,13 +219,8 @@
     height: 2px;
   }
 
-  .chart-card.temp-chart::before {
-    background: linear-gradient(90deg, var(--accent1), var(--accent2), transparent);
-  }
-
-  .chart-card.humi-chart::before {
-    background: linear-gradient(90deg, #4fc3f7, transparent);
-  }
+  .chart-card.temp-chart::before { background: linear-gradient(90deg, var(--accent1), var(--accent2), transparent); }
+  .chart-card.humi-chart::before { background: linear-gradient(90deg, #4fc3f7, transparent); }
 
   .chart-title {
     font-family: 'Space Mono', monospace;
@@ -456,15 +234,9 @@
     align-items: center;
   }
 
-  .chart-title .period {
-    color: var(--accent3);
-    font-size: 9px;
-  }
+  .chart-title .period-label { color: var(--accent3); font-size: 9px; }
 
-  .chart-container {
-    position: relative;
-    height: 140px;
-  }
+  .chart-container { position: relative; height: 150px; }
 
   .chart-stats {
     display: grid;
@@ -490,16 +262,13 @@
     margin-top: 2px;
   }
 
-  /* Periodo mygtukai */
-  .period-btns {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin-bottom: 16px;
-  }
+  /* Valdymas */
+  .controls { margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
+
+  .period-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
   .period-btn {
-    padding: 8px;
+    padding: 9px;
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -512,18 +281,84 @@
     letter-spacing: 1px;
   }
 
-  .period-btn:hover {
-    border-color: var(--accent1);
-    color: var(--accent1);
+  .period-btn:hover { border-color: var(--accent1); color: var(--accent1); }
+  .period-btn.active { background: rgba(0,212,255,0.1); border-color: var(--accent1); color: var(--accent1); }
+
+  .date-row { display: flex; align-items: center; gap: 8px; }
+
+  .date-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
   }
 
-  .period-btn.active {
+  .date-input {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color-scheme: dark;
+  }
+
+  .date-input:focus { outline: none; border-color: var(--accent1); }
+
+  .date-btn {
+    padding: 8px 14px;
     background: rgba(0,212,255,0.1);
-    border-color: var(--accent1);
+    border: 1px solid var(--accent1);
+    border-radius: 8px;
     color: var(--accent1);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .date-btn:hover { background: rgba(0,212,255,0.2); }
+  .date-btn.active { background: var(--accent1); color: var(--bg); }
+
+  .refresh-btn {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--accent1);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+  }
+
+  .refresh-btn:hover { background: rgba(0,212,255,0.05); border-color: var(--accent1); }
+  .refresh-btn:active { transform: scale(0.98); }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
   }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="container">
@@ -544,7 +379,6 @@
     </div>
   </header>
 
-  <!-- VIDAUS -->
   <div class="section-label">🏠 Vidus</div>
   <div class="card vidus" style="animation: fadeUp 0.6s ease 0.1s both; margin-bottom: 12px;">
     <div class="temp-display">
@@ -566,9 +400,8 @@
     </div>
   </div>
 
-  <!-- LAUKO -->
   <div class="section-label">🌿 Laukas</div>
-  <div class="card lauke" style="animation: fadeUp 0.6s ease 0.2s both; margin-bottom: 24px;">
+  <div class="card lauke" style="animation: fadeUp 0.6s ease 0.2s both; margin-bottom: 32px;">
     <div class="temp-display">
       <div class="temp-icon">🌤️</div>
       <div>
@@ -588,64 +421,26 @@
     </div>
   </div>
 
-  <!-- PALYGINIMAS -->
-  <div class="compare-section">
-    <div class="section-label">📊 Palyginimas</div>
-    <div class="compare-card">
-      <div class="legend">
-        <div class="legend-item">
-          <div class="legend-dot" style="background:var(--accent1)"></div>
-          Vidus
-        </div>
-        <div class="legend-item">
-          <div class="legend-dot" style="background:var(--accent2)"></div>
-          Laukas
-        </div>
-      </div>
-
-      <div class="compare-row">
-        <div class="compare-lbl">TEMP</div>
-        <div class="compare-bars">
-          <div class="cbar vidus" id="cbarVidTemp" style="width:0%"></div>
-          <div class="cbar lauke" id="cbarLaukTemp" style="width:0%"></div>
-        </div>
-        <div class="compare-val">
-          <div style="color:var(--accent1); font-size:11px;" id="cvalVidTemp">--°</div>
-          <div style="color:var(--accent2); font-size:11px;" id="cvalLaukTemp">--°</div>
-        </div>
-      </div>
-
-      <div class="compare-row">
-        <div class="compare-lbl">DRĖGMĖ</div>
-        <div class="compare-bars">
-          <div class="cbar vidus" id="cbarVidHumi" style="width:0%"></div>
-          <div class="cbar lauke" id="cbarLaukHumi" style="width:0%"></div>
-        </div>
-        <div class="compare-val">
-          <div style="color:var(--accent1); font-size:11px;" id="cvalVidHumi">--%</div>
-          <div style="color:var(--accent2); font-size:11px;" id="cvalLaukHumi">--%</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- GRAFIKAI -->
-  <div style="margin-top: 24px; animation: fadeUp 0.6s ease 0.5s both;">
+  <div style="animation: fadeUp 0.6s ease 0.3s both;">
     <div class="section-label">📈 Istorija</div>
 
-    <!-- Periodo pasirinkimas -->
-    <div class="period-btns">
-      <button class="period-btn active" onclick="setPeriod(60, this)">1H</button>
-      <button class="period-btn" onclick="setPeriod(360, this)">6H</button>
-      <button class="period-btn" onclick="setPeriod(1440, this)">24H</button>
-      <button class="period-btn" onclick="setPeriod(4320, this)">3D</button>
+    <div class="controls">
+      <div class="period-btns">
+        <button class="period-btn active" onclick="setPeriod('1H', this)">1H</button>
+        <button class="period-btn" onclick="setPeriod('12H', this)">12H</button>
+        <button class="period-btn" onclick="setPeriod('24H', this)">24H</button>
+      </div>
+      <div class="date-row">
+        <span class="date-label">📅 DATA:</span>
+        <input type="date" class="date-input" id="datePicker">
+        <button class="date-btn" id="dateBtn" onclick="setDate()">Rodyti</button>
+      </div>
     </div>
 
-    <!-- Temperatūros grafikas -->
     <div class="chart-card temp-chart">
       <div class="chart-title">
         🌡️ Temperatūra
-        <span class="period" id="tempPeriodLabel">PASKUTINĖ 1H</span>
+        <span class="period-label" id="tempPeriodLabel">PASKUTINĖ 1H</span>
       </div>
       <div class="chart-container">
         <canvas id="tempChart"></canvas>
@@ -666,11 +461,10 @@
       </div>
     </div>
 
-    <!-- Drėgmės grafikas -->
     <div class="chart-card humi-chart">
       <div class="chart-title">
         💧 Drėgmė
-        <span class="period" id="humiPeriodLabel">PASKUTINĖ 1H</span>
+        <span class="period-label" id="humiPeriodLabel">PASKUTINĖ 1H</span>
       </div>
       <div class="chart-container">
         <canvas id="humiChart"></canvas>
@@ -699,16 +493,23 @@
 </div>
 
 <script>
-// ============================================
-// KONFIGŪRACIJA – pakeisk savo duomenis!
-// ============================================
 const CHANNEL_ID = '3294006';
 const READ_API_KEY = 'Y67A8GD4V5FINMWW';
-// Field1 = vidaus temp, Field2 = vidaus drėgmė
-// Field3 = lauko temp,  Field4 = lauko drėgmė
-// ============================================
 
-// Chart.js globalūs nustatymai
+let mode = 'period';
+let currentPeriod = '1H';
+
+const periodMap = {
+  '1H':  { results: 60,   label: 'PASKUTINĖ 1H'  },
+  '12H': { results: 720,  label: 'PASKUTINĖS 12H' },
+  '24H': { results: 1440, label: 'PASKUTINĖS 24H' }
+};
+
+const picker = document.getElementById('datePicker');
+const today = new Date().toISOString().split('T')[0];
+picker.value = today;
+picker.max = today;
+
 Chart.defaults.color = '#4a6080';
 Chart.defaults.font.family = "'Space Mono', monospace";
 Chart.defaults.font.size = 9;
@@ -716,121 +517,69 @@ Chart.defaults.font.size = 9;
 const chartOptions = (yLabel) => ({
   responsive: true,
   maintainAspectRatio: false,
-  animation: { duration: 800, easing: 'easeInOutQuart' },
+  animation: { duration: 600 },
   plugins: {
-    legend: { display: true, position: 'top',
-      labels: { boxWidth: 8, boxHeight: 8, padding: 12, font: { size: 9 } }
-    },
-    tooltip: {
-      backgroundColor: '#111827',
-      borderColor: '#1e2d45',
-      borderWidth: 1,
-      titleFont: { size: 9 },
-      bodyFont: { size: 10 },
-    }
+    legend: { display: true, position: 'top', labels: { boxWidth: 8, boxHeight: 8, padding: 12, font: { size: 9 } } },
+    tooltip: { backgroundColor: '#111827', borderColor: '#1e2d45', borderWidth: 1 }
   },
   scales: {
-    x: {
-      grid: { color: 'rgba(30,45,69,0.5)' },
-      ticks: { maxTicksLimit: 6, maxRotation: 0 }
-    },
-    y: {
-      grid: { color: 'rgba(30,45,69,0.5)' },
-      ticks: { callback: v => v + yLabel }
-    }
+    x: { grid: { color: 'rgba(30,45,69,0.5)' }, ticks: { maxTicksLimit: 6, maxRotation: 0 } },
+    y: { grid: { color: 'rgba(30,45,69,0.5)' }, ticks: { callback: v => v + yLabel } }
   }
 });
 
-// Sukurti grafikus
-const tempCtx = document.getElementById('tempChart').getContext('2d');
-const tempChart = new Chart(tempCtx, {
+const makeDataset = (label, color) => ({
+  label, data: [],
+  borderColor: color,
+  backgroundColor: color + '15',
+  borderWidth: 2, pointRadius: 2, tension: 0.4, fill: true, spanGaps: true,
+});
+
+const tempChart = new Chart(document.getElementById('tempChart').getContext('2d'), {
   type: 'line',
-  data: {
-    labels: [],
-    datasets: [
-      {
-        label: 'Vidus °C',
-        data: [],
-        borderColor: '#00d4ff',
-        backgroundColor: 'rgba(0,212,255,0.08)',
-        borderWidth: 2,
-        pointRadius: 2,
-        tension: 0.4,
-        fill: true,
-        spanGaps: true,
-      },
-      {
-        label: 'Laukas °C',
-        data: [],
-        borderColor: '#ff6b35',
-        backgroundColor: 'rgba(255,107,53,0.08)',
-        borderWidth: 2,
-        pointRadius: 2,
-        tension: 0.4,
-        fill: true,
-        spanGaps: true,
-      }
-    ]
-  },
+  data: { labels: [], datasets: [ makeDataset('Vidus °C', '#00d4ff'), makeDataset('Laukas °C', '#ff6b35') ] },
   options: chartOptions('°')
 });
 
-const humiCtx = document.getElementById('humiChart').getContext('2d');
-const humiChart = new Chart(humiCtx, {
+const humiChart = new Chart(document.getElementById('humiChart').getContext('2d'), {
   type: 'line',
-  data: {
-    labels: [],
-    datasets: [
-      {
-        label: 'Vidus %',
-        data: [],
-        borderColor: '#00d4ff',
-        backgroundColor: 'rgba(0,212,255,0.08)',
-        borderWidth: 2,
-        pointRadius: 2,
-        tension: 0.4,
-        fill: true,
-        spanGaps: true,
-      },
-      {
-        label: 'Laukas %',
-        data: [],
-        borderColor: '#ff6b35',
-        backgroundColor: 'rgba(255,107,53,0.08)',
-        borderWidth: 2,
-        pointRadius: 2,
-        tension: 0.4,
-        fill: true,
-        spanGaps: true,
-      }
-    ]
-  },
+  data: { labels: [], datasets: [ makeDataset('Vidus %', '#00d4ff'), makeDataset('Laukas %', '#ff6b35') ] },
   options: chartOptions('%')
 });
 
-// Aktyvus periodas
-let currentResults = 60;
-
-const periodLabels = {
-  60: 'PASKUTINĖ 1H',
-  360: 'PASKUTINĖS 6H',
-  1440: 'PASKUTINĖS 24H',
-  4320: 'PASKUTINĖS 3D'
-};
-
-function setPeriod(results, btn) {
-  currentResults = results;
+function setPeriod(period, btn) {
+  mode = 'period';
+  currentPeriod = period;
   document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  const label = periodLabels[results] || '';
+  document.getElementById('dateBtn').classList.remove('active');
+  const label = periodMap[period].label;
   document.getElementById('tempPeriodLabel').textContent = label;
   document.getElementById('humiPeriodLabel').textContent = label;
   fetchCharts();
 }
 
+function setDate() {
+  const val = picker.value;
+  if (!val) return;
+  mode = 'date';
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('dateBtn').classList.add('active');
+  document.getElementById('tempPeriodLabel').textContent = val;
+  document.getElementById('humiPeriodLabel').textContent = val;
+  fetchCharts();
+}
+
 async function fetchCharts() {
+  let url;
+  if (mode === 'date') {
+    const date = picker.value;
+    url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&start=${date}T00:00:00Z&end=${date}T23:59:59Z&results=8000`;
+  } else {
+    url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=${periodMap[currentPeriod].results}`;
+  }
+
   try {
-    const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=${currentResults}`;
     const res = await fetch(url);
     const data = await res.json();
     const feeds = data.feeds || [];
@@ -838,10 +587,7 @@ async function fetchCharts() {
     const labels = [], vTemps = [], vHumis = [], lTemps = [], lHumis = [];
     feeds.forEach(f => {
       const t = new Date(f.created_at);
-      const label = currentResults <= 360
-        ? t.toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'})
-        : t.toLocaleDateString('lt-LT', {month:'2-digit', day:'2-digit'}) + ' ' + t.toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'});
-      labels.push(label);
+      labels.push(t.toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'}));
       vTemps.push(f.field1 ? parseFloat(f.field1) : null);
       vHumis.push(f.field2 ? parseFloat(f.field2) : null);
       lTemps.push(f.field3 ? parseFloat(f.field3) : null);
@@ -858,7 +604,6 @@ async function fetchCharts() {
     humiChart.data.datasets[1].data = lHumis;
     humiChart.update();
 
-    // Statistika temperatūra
     const validVT = vTemps.filter(v => v !== null);
     if (validVT.length) {
       document.getElementById('tempMin').textContent = Math.min(...validVT).toFixed(1) + '°';
@@ -866,7 +611,6 @@ async function fetchCharts() {
       document.getElementById('tempAvg').textContent = (validVT.reduce((a,b)=>a+b,0)/validVT.length).toFixed(1) + '°';
     }
 
-    // Statistika drėgmė
     const validVH = vHumis.filter(v => v !== null);
     if (validVH.length) {
       document.getElementById('humiMin').textContent = Math.min(...validVH).toFixed(0) + '%';
@@ -883,24 +627,19 @@ async function fetchData() {
   document.getElementById('statusText').textContent = 'Atnaujinama...';
 
   try {
-    const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=8`;
-    const res = await fetch(url);
+    const res = await fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=8`);
     const data = await res.json();
     const feeds = data.feeds || [];
 
     const getLatest = (field) => {
-      for (let i = feeds.length - 1; i >= 0; i--) {
-        if (feeds[i][field] !== null && feeds[i][field] !== undefined) {
+      for (let i = feeds.length - 1; i >= 0; i--)
+        if (feeds[i][field] !== null && feeds[i][field] !== undefined)
           return parseFloat(feeds[i][field]);
-        }
-      }
       return NaN;
     };
 
-    const vT = getLatest('field1');
-    const vH = getLatest('field2');
-    const lT = getLatest('field3');
-    const lH = getLatest('field4');
+    const vT = getLatest('field1'), vH = getLatest('field2');
+    const lT = getLatest('field3'), lH = getLatest('field4');
 
     document.getElementById('vidTemp').textContent = isNaN(vT) ? '--' : vT.toFixed(1);
     document.getElementById('vidHumi').textContent = isNaN(vH) ? '--%' : vH.toFixed(1) + '%';
@@ -909,31 +648,18 @@ async function fetchData() {
     document.getElementById('laukHumi').textContent = isNaN(lH) ? '--%' : lH.toFixed(1) + '%';
     document.getElementById('laukHumiBar').style.width = isNaN(lH) ? '0%' : lH + '%';
 
-    const maxT = Math.max(Math.abs(vT||0), Math.abs(lT||0), 40);
-    document.getElementById('cbarVidTemp').style.width = Math.min(100, (Math.abs(vT||0)/maxT)*100) + '%';
-    document.getElementById('cbarLaukTemp').style.width = Math.min(100, (Math.abs(lT||0)/maxT)*100) + '%';
-    document.getElementById('cbarVidHumi').style.width = (vH||0) + '%';
-    document.getElementById('cbarLaukHumi').style.width = (lH||0) + '%';
-    document.getElementById('cvalVidTemp').textContent = isNaN(vT) ? '--°' : vT.toFixed(1) + '°';
-    document.getElementById('cvalLaukTemp').textContent = isNaN(lT) ? '--°' : lT.toFixed(1) + '°';
-    document.getElementById('cvalVidHumi').textContent = isNaN(vH) ? '--%' : vH.toFixed(0) + '%';
-    document.getElementById('cvalLaukHumi').textContent = isNaN(lH) ? '--%' : lH.toFixed(0) + '%';
-
     const now = new Date();
-    document.getElementById('lastUpdate').textContent =
-      now.toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'});
     document.getElementById('statusText').textContent = 'Gyvas · ' + now.toLocaleDateString('lt-LT');
 
   } catch(e) {
     document.getElementById('statusText').textContent = 'Klaida · Tikrink API raktą';
-    console.error(e);
   }
 
   btn.textContent = '↻  Atnaujinti duomenis';
   btn.style.opacity = '1';
 }
 
-// Paleisti
 fetchData();
 fetchCharts();
 setInterval(fetchData, 30000);
