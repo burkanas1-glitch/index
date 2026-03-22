@@ -415,7 +415,79 @@
   }
 
   .spinning { animation: spin 1s linear infinite; }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .chart-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .chart-card.temp-chart::before {
+    background: linear-gradient(90deg, var(--accent1), var(--accent2), transparent);
+  }
+
+  .chart-card.humi-chart::before {
+    background: linear-gradient(90deg, #4fc3f7, transparent);
+  }
+
+  .chart-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .chart-title .period {
+    color: var(--accent3);
+    font-size: 9px;
+  }
+
+  .chart-container {
+    position: relative;
+    height: 140px;
+  }
+
+  .chart-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .chart-stat { text-align: center; }
+
+  .chart-stat-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .chart-stat-lbl {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="container">
@@ -521,6 +593,61 @@
     </div>
   </div>
 
+  <!-- GRAFIKAI -->
+  <div style="margin-top: 24px; animation: fadeUp 0.6s ease 0.5s both;">
+    <div class="section-label">📈 Istorija (24h)</div>
+
+    <!-- Temperatūros grafikas -->
+    <div class="chart-card temp-chart">
+      <div class="chart-title">
+        🌡️ Temperatūra
+        <span class="period">PASKUTINĖS 24H</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="tempChart"></canvas>
+      </div>
+      <div class="chart-stats">
+        <div class="chart-stat">
+          <div class="chart-stat-val" id="tempMin" style="color:#4fc3f7">--°</div>
+          <div class="chart-stat-lbl">MIN</div>
+        </div>
+        <div class="chart-stat">
+          <div class="chart-stat-val" id="tempAvg" style="color:var(--text)">--°</div>
+          <div class="chart-stat-lbl">VIDURKIS</div>
+        </div>
+        <div class="chart-stat">
+          <div class="chart-stat-val" id="tempMax" style="color:var(--accent2)">--°</div>
+          <div class="chart-stat-lbl">MAX</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drėgmės grafikas -->
+    <div class="chart-card humi-chart">
+      <div class="chart-title">
+        💧 Drėgmė
+        <span class="period">PASKUTINĖS 24H</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="humiChart"></canvas>
+      </div>
+      <div class="chart-stats">
+        <div class="chart-stat">
+          <div class="chart-stat-val" id="humiMin" style="color:#4fc3f7">--%</div>
+          <div class="chart-stat-lbl">MIN</div>
+        </div>
+        <div class="chart-stat">
+          <div class="chart-stat-val" id="humiAvg" style="color:var(--text)">--%</div>
+          <div class="chart-stat-lbl">VIDURKIS</div>
+        </div>
+        <div class="chart-stat">
+          <div class="chart-stat-val" id="humiMax" style="color:var(--accent2)">--%</div>
+          <div class="chart-stat-lbl">MAX</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <button class="refresh-btn" onclick="fetchData()" id="refreshBtn">
     ↻ &nbsp; Atnaujinti duomenis
   </button>
@@ -537,6 +664,102 @@ const READ_API_KEY = 'Y67A8GD4V5FINMWW';
 // Field3 = lauko temp,  Field4 = lauko drėgmė
 // ============================================
 
+// Chart.js globalūs nustatymai
+Chart.defaults.color = '#4a6080';
+Chart.defaults.font.family = "'Space Mono', monospace";
+Chart.defaults.font.size = 9;
+
+const chartOptions = (yLabel) => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: { duration: 800, easing: 'easeInOutQuart' },
+  plugins: {
+    legend: { display: true, position: 'top',
+      labels: { boxWidth: 8, boxHeight: 8, padding: 12, font: { size: 9 } }
+    },
+    tooltip: {
+      backgroundColor: '#111827',
+      borderColor: '#1e2d45',
+      borderWidth: 1,
+      titleFont: { size: 9 },
+      bodyFont: { size: 10 },
+    }
+  },
+  scales: {
+    x: {
+      grid: { color: 'rgba(30,45,69,0.5)' },
+      ticks: { maxTicksLimit: 6, maxRotation: 0 }
+    },
+    y: {
+      grid: { color: 'rgba(30,45,69,0.5)' },
+      ticks: { callback: v => v + yLabel }
+    }
+  }
+});
+
+// Sukurti grafikus
+const tempCtx = document.getElementById('tempChart').getContext('2d');
+const tempChart = new Chart(tempCtx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [
+      {
+        label: 'Vidus °C',
+        data: [],
+        borderColor: '#00d4ff',
+        backgroundColor: 'rgba(0,212,255,0.08)',
+        borderWidth: 2,
+        pointRadius: 2,
+        tension: 0.4,
+        fill: true,
+      },
+      {
+        label: 'Laukas °C',
+        data: [],
+        borderColor: '#ff6b35',
+        backgroundColor: 'rgba(255,107,53,0.08)',
+        borderWidth: 2,
+        pointRadius: 2,
+        tension: 0.4,
+        fill: true,
+      }
+    ]
+  },
+  options: chartOptions('°')
+});
+
+const humiCtx = document.getElementById('humiChart').getContext('2d');
+const humiChart = new Chart(humiCtx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [
+      {
+        label: 'Vidus %',
+        data: [],
+        borderColor: '#00d4ff',
+        backgroundColor: 'rgba(0,212,255,0.08)',
+        borderWidth: 2,
+        pointRadius: 2,
+        tension: 0.4,
+        fill: true,
+      },
+      {
+        label: 'Laukas %',
+        data: [],
+        borderColor: '#ff6b35',
+        backgroundColor: 'rgba(255,107,53,0.08)',
+        borderWidth: 2,
+        pointRadius: 2,
+        tension: 0.4,
+        fill: true,
+      }
+    ]
+  },
+  options: chartOptions('%')
+});
+
 async function fetchData() {
   const btn = document.getElementById('refreshBtn');
   btn.textContent = '↻  Kraunama...';
@@ -544,12 +767,13 @@ async function fetchData() {
   document.getElementById('statusText').textContent = 'Atnaujinama...';
 
   try {
-    const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=8`;
+    const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=100`;
     const res = await fetch(url);
     const data = await res.json();
 
-    // Iš paskutinių 8 įrašų imam paskutinę ne-null reikšmę
     const feeds = data.feeds || [];
+
+    // Paskutinė ne-null reikšmė
     const getLatest = (field) => {
       for (let i = feeds.length - 1; i >= 0; i--) {
         if (feeds[i][field] !== null && feeds[i][field] !== undefined) {
@@ -587,9 +811,50 @@ async function fetchData() {
     document.getElementById('cvalVidHumi').textContent = isNaN(vH) ? '--%' : vH.toFixed(0) + '%';
     document.getElementById('cvalLaukHumi').textContent = isNaN(lH) ? '--%' : lH.toFixed(0) + '%';
 
+    // GRAFIKAI – paruošti duomenis
+    const labels = [], vTemps = [], vHumis = [], lTemps = [], lHumis = [];
+
+    feeds.forEach(f => {
+      const t = new Date(f.created_at);
+      const label = t.toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'});
+      labels.push(label);
+      vTemps.push(f.field1 ? parseFloat(f.field1) : null);
+      vHumis.push(f.field2 ? parseFloat(f.field2) : null);
+      lTemps.push(f.field3 ? parseFloat(f.field3) : null);
+      lHumis.push(f.field4 ? parseFloat(f.field4) : null);
+    });
+
+    // Atnaujinti temperatūros grafiką
+    tempChart.data.labels = labels;
+    tempChart.data.datasets[0].data = vTemps;
+    tempChart.data.datasets[1].data = lTemps;
+    tempChart.update();
+
+    // Atnaujinti drėgmės grafiką
+    humiChart.data.labels = labels;
+    humiChart.data.datasets[0].data = vHumis;
+    humiChart.data.datasets[1].data = lHumis;
+    humiChart.update();
+
+    // Statistika – temperatūra (vidaus)
+    const validVT = vTemps.filter(v => v !== null);
+    if (validVT.length) {
+      document.getElementById('tempMin').textContent = Math.min(...validVT).toFixed(1) + '°';
+      document.getElementById('tempMax').textContent = Math.max(...validVT).toFixed(1) + '°';
+      document.getElementById('tempAvg').textContent = (validVT.reduce((a,b)=>a+b,0)/validVT.length).toFixed(1) + '°';
+    }
+
+    // Statistika – drėgmė (vidaus)
+    const validVH = vHumis.filter(v => v !== null);
+    if (validVH.length) {
+      document.getElementById('humiMin').textContent = Math.min(...validVH).toFixed(0) + '%';
+      document.getElementById('humiMax').textContent = Math.max(...validVH).toFixed(0) + '%';
+      document.getElementById('humiAvg').textContent = (validVH.reduce((a,b)=>a+b,0)/validVH.length).toFixed(0) + '%';
+    }
+
     // Laikas
     const now = new Date();
-    document.getElementById('lastUpdate').textContent = 
+    document.getElementById('lastUpdate').textContent =
       now.toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'});
     document.getElementById('statusText').textContent = 'Gyvas · ' + now.toLocaleDateString('lt-LT');
 
