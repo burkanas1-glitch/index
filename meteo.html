@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meteo Stotelė</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --card: #111827;
+    --border: #1e2d45;
+    --accent1: #00d4ff;
+    --accent2: #ff6b35;
+    --accent3: #39ff14;
+    --text: #e2e8f0;
+    --muted: #4a6080;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .title {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 3px;
+    color: var(--accent1);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent3);
+    margin-top: 8px;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent3);
+    animation: pulse 2s infinite;
+  }
+
+  .update-time {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* Section labels */
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .card.vidus::before { background: linear-gradient(90deg, var(--accent1), transparent); }
+  .card.lauke::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+
+  /* Main temperature display */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+
+  .temp-display {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .temp-icon {
+    font-size: 28px;
+    margin-bottom: 4px;
+  }
+
+  .temp-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--accent1);
+    transition: all 0.5s ease;
+  }
+
+  .card.lauke .temp-value {
+    color: var(--accent2);
+  }
+
+  .temp-unit {
+    font-size: 20px;
+    color: var(--muted);
+    vertical-align: super;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .temp-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  /* Humidity bar */
+  .humi-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .humi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .humi-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .humi-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent1);
+    transition: all 0.5s ease;
+  }
+
+  .card.lauke .humi-value {
+    color: var(--accent2);
+  }
+
+  .humi-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .humi-fill {
+    height: 100%;
+    background: var(--accent1);
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  .card.lauke .humi-fill {
+    background: var(--accent2);
+  }
+
+  /* Feels like / extra info */
+  .extra-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .extra-item {
+    text-align: center;
+  }
+
+  .extra-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .extra-lbl {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Mini chart */
+  .chart-section {
+    margin-top: 24px;
+    animation: fadeUp 0.6s ease 0.3s both;
+  }
+
+  .chart-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+
+  canvas {
+    width: 100% !important;
+    height: 120px !important;
+  }
+
+  /* Comparison bar */
+  .compare-section {
+    margin-top: 24px;
+    animation: fadeUp 0.6s ease 0.4s both;
+  }
+
+  .compare-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+
+  .compare-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .compare-row:last-child { margin-bottom: 0; }
+
+  .compare-lbl {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    width: 50px;
+    flex-shrink: 0;
+  }
+
+  .compare-bars {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .cbar {
+    height: 6px;
+    border-radius: 3px;
+    transition: width 1s ease;
+    position: relative;
+  }
+
+  .cbar.vidus { background: var(--accent1); opacity: 0.9; }
+  .cbar.lauke { background: var(--accent2); opacity: 0.9; }
+
+  .compare-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    width: 45px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  /* Refresh button */
+  .refresh-btn {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--accent1);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    animation: fadeUp 0.6s ease 0.5s both;
+  }
+
+  .refresh-btn:hover {
+    background: rgba(0,212,255,0.05);
+    border-color: var(--accent1);
+  }
+
+  .refresh-btn:active { transform: scale(0.98); }
+
+  /* Loading state */
+  .loading .temp-value,
+  .loading .humi-value {
+    color: var(--muted) !important;
+  }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .spinning { animation: spin 1s linear infinite; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div>
+      <div class="title">ESP32 · DHT22 · ThingSpeak</div>
+      <h1>Meteo<br>Stotelė</h1>
+      <div class="status">
+        <div class="dot"></div>
+        <span id="statusText">Jungiamasi...</span>
+      </div>
+    </div>
+    <div class="update-time">
+      <div style="font-size:18px; margin-bottom:4px;">🌡️</div>
+      <div id="lastUpdate">--:--</div>
+      <div style="margin-top:2px; color:#1e2d45">atnaujinta</div>
+    </div>
+  </header>
+
+  <!-- VIDAUS -->
+  <div class="section-label">🏠 Vidus</div>
+  <div class="card vidus" style="animation: fadeUp 0.6s ease 0.1s both; margin-bottom: 12px;">
+    <div class="temp-display">
+      <div class="temp-icon">🌡️</div>
+      <div>
+        <span class="temp-value" id="vidTemp">--</span>
+        <span class="temp-unit">°C</span>
+      </div>
+      <div class="temp-label">TEMPERATŪRA</div>
+    </div>
+    <div class="humi-section">
+      <div class="humi-header">
+        <span class="humi-label">💧 DRĖGMĖ</span>
+        <span class="humi-value" id="vidHumi">--%</span>
+      </div>
+      <div class="humi-bar">
+        <div class="humi-fill" id="vidHumiBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAUKO -->
+  <div class="section-label">🌿 Laukas</div>
+  <div class="card lauke" style="animation: fadeUp 0.6s ease 0.2s both; margin-bottom: 24px;">
+    <div class="temp-display">
+      <div class="temp-icon">🌤️</div>
+      <div>
+        <span class="temp-value" id="laukTemp">--</span>
+        <span class="temp-unit">°C</span>
+      </div>
+      <div class="temp-label">TEMPERATŪRA</div>
+    </div>
+    <div class="humi-section">
+      <div class="humi-header">
+        <span class="humi-label">💧 DRĖGMĖ</span>
+        <span class="humi-value" id="laukHumi">--%</span>
+      </div>
+      <div class="humi-bar">
+        <div class="humi-fill" id="laukHumiBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PALYGINIMAS -->
+  <div class="compare-section">
+    <div class="section-label">📊 Palyginimas</div>
+    <div class="compare-card">
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:var(--accent1)"></div>
+          Vidus
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:var(--accent2)"></div>
+          Laukas
+        </div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-lbl">TEMP</div>
+        <div class="compare-bars">
+          <div class="cbar vidus" id="cbarVidTemp" style="width:0%"></div>
+          <div class="cbar lauke" id="cbarLaukTemp" style="width:0%"></div>
+        </div>
+        <div class="compare-val">
+          <div style="color:var(--accent1); font-size:11px;" id="cvalVidTemp">--°</div>
+          <div style="color:var(--accent2); font-size:11px;" id="cvalLaukTemp">--°</div>
+        </div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-lbl">DRĖGMĖ</div>
+        <div class="compare-bars">
+          <div class="cbar vidus" id="cbarVidHumi" style="width:0%"></div>
+          <div class="cbar lauke" id="cbarLaukHumi" style="width:0%"></div>
+        </div>
+        <div class="compare-val">
+          <div style="color:var(--accent1); font-size:11px;" id="cvalVidHumi">--%</div>
+          <div style="color:var(--accent2); font-size:11px;" id="cvalLaukHumi">--%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="refresh-btn" onclick="fetchData()" id="refreshBtn">
+    ↻ &nbsp; Atnaujinti duomenis
+  </button>
+
+</div>
+
+<script>
+// ============================================
+// KONFIGŪRACIJA – pakeisk savo duomenis!
+// ============================================
+const CHANNEL_ID = '3294006';
+const READ_API_KEY = 'Y67A8GD4V5FINMWW';
+// Field1 = vidaus temp, Field2 = vidaus drėgmė
+// Field3 = lauko temp,  Field4 = lauko drėgmė
+// ============================================
+
+async function fetchData() {
+  const btn = document.getElementById('refreshBtn');
+  btn.textContent = '↻  Kraunama...';
+  btn.style.opacity = '0.5';
+  document.getElementById('statusText').textContent = 'Atnaujinama...';
+
+  try {
+    const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=8`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    // Iš paskutinių 8 įrašų imam paskutinę ne-null reikšmę
+    const feeds = data.feeds || [];
+    const getLatest = (field) => {
+      for (let i = feeds.length - 1; i >= 0; i--) {
+        if (feeds[i][field] !== null && feeds[i][field] !== undefined) {
+          return parseFloat(feeds[i][field]);
+        }
+      }
+      return NaN;
+    };
+
+    const vT = getLatest('field1');
+    const vH = getLatest('field2');
+    const lT = getLatest('field3');
+    const lH = getLatest('field4');
+
+    // Vidus
+    document.getElementById('vidTemp').textContent = isNaN(vT) ? '--' : vT.toFixed(1);
+    document.getElementById('vidHumi').textContent = isNaN(vH) ? '--%' : vH.toFixed(1) + '%';
+    document.getElementById('vidHumiBar').style.width = isNaN(vH) ? '0%' : vH + '%';
+
+    // Laukas
+    document.getElementById('laukTemp').textContent = isNaN(lT) ? '--' : lT.toFixed(1);
+    document.getElementById('laukHumi').textContent = isNaN(lH) ? '--%' : lH.toFixed(1) + '%';
+    document.getElementById('laukHumiBar').style.width = isNaN(lH) ? '0%' : lH + '%';
+
+    // Palyginimas
+    const maxT = Math.max(Math.abs(vT||0), Math.abs(lT||0), 40);
+    const pctVT = Math.min(100, (Math.abs(vT||0) / maxT) * 100);
+    const pctLT = Math.min(100, (Math.abs(lT||0) / maxT) * 100);
+    document.getElementById('cbarVidTemp').style.width = pctVT + '%';
+    document.getElementById('cbarLaukTemp').style.width = pctLT + '%';
+    document.getElementById('cbarVidHumi').style.width = (vH||0) + '%';
+    document.getElementById('cbarLaukHumi').style.width = (lH||0) + '%';
+    document.getElementById('cvalVidTemp').textContent = isNaN(vT) ? '--°' : vT.toFixed(1) + '°';
+    document.getElementById('cvalLaukTemp').textContent = isNaN(lT) ? '--°' : lT.toFixed(1) + '°';
+    document.getElementById('cvalVidHumi').textContent = isNaN(vH) ? '--%' : vH.toFixed(0) + '%';
+    document.getElementById('cvalLaukHumi').textContent = isNaN(lH) ? '--%' : lH.toFixed(0) + '%';
+
+    // Laikas
+    const now = new Date();
+    document.getElementById('lastUpdate').textContent = 
+      now.toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('statusText').textContent = 'Gyvas · ' + now.toLocaleDateString('lt-LT');
+
+  } catch(e) {
+    document.getElementById('statusText').textContent = 'Klaida · Tikrink API raktą';
+    console.error(e);
+  }
+
+  btn.textContent = '↻  Atnaujinti duomenis';
+  btn.style.opacity = '1';
+}
+
+// Auto atnaujinimas kas 30 sek
+fetchData();
+setInterval(fetchData, 30000);
+</script>
+</body>
+</html>
