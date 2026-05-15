@@ -483,22 +483,11 @@ async function fetchData() {
       }
  
       const diff = newest.v - oldest.v;
-      const el = document.getElementById('pressureTrend');
       const hoursBack = ((newest.t - oldest.t) / 3600000).toFixed(1);
- 
-      if      (diff > 3)   { el.textContent=`↑↑ GERĖJA`;  el.style.color='#07e000'; el.style.borderColor='#07e000'; }
-      else if (diff > 1)   { el.textContent=`↑ GERĖJA`;   el.style.color='#07e000'; el.style.borderColor='#07e000'; }
-      else if (diff > -1)  { el.textContent=`→ STABILUS`; el.style.color='#aaa';    el.style.borderColor='#aaa'; }
-      else if (diff > -3)  { el.textContent=`↓ BLOGĖJA`;  el.style.color='#f39c12'; el.style.borderColor='#f39c12'; }
-      else                 { el.textContent=`↓↓ AUDRA!`;  el.style.color='#e74c3c'; el.style.borderColor='#e74c3c'; }
- 
-      // Tooltip su detalėmis
-      el.title = `Per ${hoursBack}h: ${diff>0?'+':''}${diff.toFixed(1)} hPa (${oldest.v.toFixed(0)}→${newest.v.toFixed(0)})`;
+      // Tendencija rodoma prognozės kortelėje per calcLocalForecast
+      // (atskira kortelė pašalinta)
     } else {
-      const el = document.getElementById('pressureTrend');
-      el.textContent = '... KAUPIAMA';
-      el.style.color = '#444';
-      el.style.borderColor = '#444';
+      // Slėgio istorijos dar nėra
     }
  
     const now = new Date();
