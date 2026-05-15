@@ -152,18 +152,6 @@ h1{font-size:28px;font-weight:800;line-height:1;color:var(--tx);}
   <div class="comfort-bar" id="laukComfort" style="background:#888">KRAUNAMA</div>
 </div>
  
-<!-- SLĖGIS -->
-<div class="section-label" style="margin-top:20px;">🔵 Atmosferinis slėgis</div>
-<div class="pressure-card" style="animation:fadeUp .6s ease .3s both;">
-  <div class="pressure-main">
-    <div>
-      <span class="pressure-val" id="pressureVal">---</span>
-      <span class="pressure-unit"> hPa</span>
-    </div>
-    <div class="pressure-trend" id="pressureTrend" style="color:#888;border-color:#888">...</div>
-  </div>
-</div>
- 
 <!-- OWM ORAI -->
 <div class="section-label">⛅ Orai – Žeimelis</div>
 <div class="owm-card" style="animation:fadeUp .6s ease .4s both;">
@@ -472,9 +460,10 @@ async function fetchData() {
     vc.textContent = cv.txt; vc.style.background = cv.bg;
     lc.textContent = cl.txt; lc.style.background = cl.bg;
  
-    // Slėgis
+    // Slėgis – rodomas prognozės kortelėje
     if (!isNaN(pr)) {
-      document.getElementById('pressureVal').textContent = pr.toFixed(0);
+      // pressureVal naudojamas calcLocalForecast viduje
+      window._currentPressure = pr;
     }
  
     // ── Slėgio tendencija iš ThingSpeak istorijos ──
