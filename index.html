@@ -448,8 +448,11 @@ async function fetchCharts() {
  
 async function fetchData() {
   try {
-    // Imame 200 įrašų – užtenka ~3 valandoms (Field5 siunčiama kas 5 min)
-    const data = await (await fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=200`)).json();
+    // Imame 100 įrašų – pakanka ~3 valandoms kai siunčiama kas 5 min
+    const resp = await fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=100`);
+    if (!resp.ok) throw new Error('ThingSpeak klaida: ' + resp.status);
+    const data = await resp.json();
+    if (!data.feeds) throw new Error('Nėra duomenų');
     const feeds = data.feeds || [];
     const get = field => {
       for (let i=feeds.length-1;i>=0;i--)
@@ -513,7 +516,8 @@ async function fetchData() {
     calcNowConditions(lT, lH, window._owmIcon || '');
  
   } catch(e) {
-    document.getElementById('statusText').textContent = 'Klaida · Tikrink API raktą';
+    console.error('fetchData klaida:', e);
+    document.getElementById('statusText').textContent = 'Klaida: ' + e.message;
   }
 }
  
