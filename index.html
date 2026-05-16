@@ -198,8 +198,21 @@ h1{font-size:28px;font-weight:800;line-height:1;color:var(--tx);}
 <div class="card" style="animation:fadeUp .6s ease .45s both;margin-bottom:24px;position:relative;overflow:hidden;">
   <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#9b59b6,#00d4ff,transparent);"></div>
  
+  <!-- Dabartinė būklė iš daviklių -->
+  <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.03);border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+    <div>
+      <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:1px;margin-bottom:4px;">DABAR LAUKE</div>
+      <div style="font-size:24px;" id="nowEmoji">⏳</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;" id="nowText">KRAUNAMA</div>
+      <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--mu);margin-top:2px;" id="nowSub"></div>
+    </div>
+  </div>
+ 
   <!-- Prognozės rezultatas -->
-  <div id="localForecastResult" style="text-align:center;padding:12px 0 16px;">
+  <div id="localForecastResult" style="text-align:center;padding:12px 0 16px;border-top:1px solid var(--border);">
+    <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:1px;margin-bottom:8px;">TENDENCIJA</div>
     <div style="font-size:32px;margin-bottom:6px;" id="localForecastEmoji">⏳</div>
     <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--tx);" id="localForecastText">KRAUNAMA...</div>
     <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--mu);margin-top:4px;" id="localForecastSub"></div>
@@ -496,10 +509,88 @@ async function fetchData() {
  
     // ── Vietinė prognozė iš visų trijų daviklių ──
     calcLocalForecast(feeds);
+    // Dabartinė būklė
+    calcNowConditions(lT, lH, window._owmIcon || '');
  
   } catch(e) {
     document.getElementById('statusText').textContent = 'Klaida · Tikrink API raktą';
   }
+}
+ 
+function calcNowConditions(tempL, humiL, owmIcon) {
+  // Dabartinė būklė iš lauko daviklių + OWM ikonos
+  const t = parseFloat(tempL);
+  const h = parseFloat(humiL);
+  const icon = owmIcon || '';
+ 
+  // Ar naktis?
+  const hr = new Date().getHours();
+  const isNight = hr >= 22 || hr < 6;
+  const isEvening = hr >= 20 || hr < 8;
+ 
+  let emoji = '⛅', text = 'KINTAMA', sub = '', color = 'var(--tx)';
+ 
+  // Iš OWM ikonos žinome ar lyja/sninga
+  const isRain  = icon.startsWith('09') || icon.startsWith('10');
+  const isSnow  = icon.startsWith('13');
+  const isThund = icon.startsWith('11');
+  const isFog   = icon.startsWith('50');
+  const isClear = icon.startsWith('01');
+  const isCloudy= icon.startsWith('03') || icon.startsWith('04');
+  const isPCloudy=icon.startsWith('02');
+ 
+  // Temperatūros kategorija
+  if (!isNaN(t)) {
+    if (t <= -15) {
+      emoji = '🥶'; text = 'SPEIGAS'; sub = t.toFixed(1)+'°C'; color = '#00d4ff';
+    } else if (t < 0) {
+      emoji = isSnow ? '❄️' : '🌨️';
+      text = isSnow ? 'SNINGA' : 'ŠALTA';
+      sub = t.toFixed(1)+'°C';
+      color = '#4fc3f7';
+    } else if (isRain) {
+      if (t < 5) { emoji = '🌨️'; text = 'ŠLAPDRIBA'; color = '#4fc3f7'; }
+      else       { emoji = '🌧️'; text = 'LYJA';      color = '#3498db'; }
+      sub = t.toFixed(1)+'°C';
+    } else if (isThund) {
+      emoji = '⛈️'; text = 'AUDRA'; sub = t.toFixed(1)+'°C'; color = '#e74c3c';
+    } else if (isFog) {
+      emoji = '🌫️'; text = 'RŪKAS'; sub = t.toFixed(1)+'°C'; color = '#aaa';
+    } else if (isCloudy) {
+      emoji = '☁️'; text = 'DEBESUOTA'; sub = t.toFixed(1)+'°C'; color = '#aaa';
+    } else if (isPCloudy) {
+      emoji = isNight ? '🌙' : '🌤️';
+      text = isNight ? 'NAKTIS' : 'IS DALIES DEBESUOTA';
+      sub = t.toFixed(1)+'°C'; color = isNight ? '#9b59b6' : '#f39c12';
+    } else if (isClear) {
+      if (isNight) {
+        // Žvaigždėta naktis tik jei drėgmė maža
+        if (!isNaN(h) && h < 60) {
+          emoji = '🌟'; text = 'ŽVAIGŽDĖTA'; color = '#f1c40f';
+        } else {
+          emoji = '🌙'; text = 'NAKTIS'; color = '#9b59b6';
+        }
+      } else {
+        emoji = '☀️'; text = 'GIEDRA'; color = '#f1c40f';
+      }
+      sub = t.toFixed(1)+'°C';
+    } else {
+      // Nėra OWM ikonos – sprendžiame iš drėgmės
+      if (!isNaN(h)) {
+        if (h > 90) { emoji = '🌧️'; text = 'TIKĖTINAS LIETUS'; color = '#3498db'; }
+        else if (h > 80) { emoji = '☁️'; text = 'DEBESUOTA'; color = '#aaa'; }
+        else if (h < 40) { emoji = isNight ? '🌙' : '☀️'; text = isNight ? 'NAKTIS' : 'GIEDRA'; color = '#f1c40f'; }
+        else { emoji = '⛅'; text = 'KINTAMA'; color = 'var(--tx)'; }
+        sub = t.toFixed(1)+'°C';
+      }
+    }
+  }
+ 
+  document.getElementById('nowEmoji').textContent = emoji;
+  const nowText = document.getElementById('nowText');
+  nowText.textContent = text;
+  nowText.style.color = color;
+  document.getElementById('nowSub').textContent = sub;
 }
  
 function calcLocalForecast(feeds) {
@@ -559,32 +650,39 @@ function calcLocalForecast(feeds) {
     document.getElementById('pfHumiDiff').textContent = (hm.diff>0?'+':'')+hm.diff.toFixed(1)+'%';
   }
  
-  // Prognozės verdiktas
-  let score = 0;
+  // ── Balų sistema (griežtesnė) ──────────────
   if (pr) {
-    if (pr.diff > 3)  score += 2;  // Sparčiai kyla = geras oras
-    if (pr.diff > 1)  score += 1;
-    if (pr.diff < -1) score -= 1;
-    if (pr.diff < -3) score -= 2;  // Sparčiai krenta = blogas oras
+    if (pr.diff > 3)   score += 2;  // Slėgis sparčiai kyla = puikus oras
+    if (pr.diff > 1)   score += 1;  // Kyla = gerėja
+    if (pr.diff < -1)  score -= 1;  // Krenta = blogėja
+    if (pr.diff < -3)  score -= 2;  // Sparčiai krenta = blogas oras
   }
   if (hm) {
-    if (hm.diff > 10) score -= 1;  // Drėgmė kyla = tikėtinas lietus
-    if (hm.diff < -5) score += 1;  // Drėgmė krenta = gerėja
+    if (hm.diff > 5)   score -= 1;  // Drėgmė kyla >5% = pradeda blogėti
+    if (hm.diff > 10)  score -= 1;  // Kyla >10% = tikėtinas lietus
+    if (hm.diff < -5)  score += 1;  // Krenta = gerėja
   }
   if (tp) {
-    if (tp.diff < -3) score -= 1;  // Temperatūra krenta = blogas oras
+    if (tp.diff < -2)  score -= 1;  // Temp krenta >2° = blogėja
+    if (tp.diff < -4)  score -= 1;  // Krenta >4° = tikrai blogėja
   }
+ 
+  // Kombinacija: drėgmė kyla + slėgis kyla = lietus jau yra bet gerės
+  // Kombinacija: drėgmė kyla + slėgis krenta = blogėja sparčiai
+  if (hm && pr && hm.diff > 5 && pr.diff < 0) score -= 1;
+  // Kombinacija: drėgmė kyla + temp krenta = tikėtinas lietus
+  if (hm && tp && hm.diff > 5 && tp.diff < -1) score -= 1;
  
   const el_emoji = document.getElementById('localForecastEmoji');
   const el_text  = document.getElementById('localForecastText');
   const el_sub   = document.getElementById('localForecastSub');
  
-  if (score >= 3)       { el_emoji.textContent='☀️';  el_text.textContent='PUIKUS ORAS';      el_text.style.color='#f1c40f'; el_sub.textContent='Slėgis sparčiai kyla'; }
-  else if (score >= 1)  { el_emoji.textContent='🌤️'; el_text.textContent='GERĖJA';           el_text.style.color='#07e000'; el_sub.textContent='Oras turėtų pagerėti'; }
-  else if (score === 0) { el_emoji.textContent='🌥️'; el_text.textContent='STABILUS';         el_text.style.color='#aaa';    el_sub.textContent='Didelių pokyčių nesitikima'; }
-  else if (score >= -1) { el_emoji.textContent='🌧️'; el_text.textContent='BLOGĖJA';          el_text.style.color='#f39c12'; el_sub.textContent='Tikėtini krituliai'; }
-  else if (score >= -2) { el_emoji.textContent='⛈️'; el_text.textContent='TIKĖTINAS LIETUS'; el_text.style.color='#e67e22'; el_sub.textContent='Didėjanti lietaus tikimybė'; }
-  else                  { el_emoji.textContent='🌩️'; el_text.textContent='BLOGŲ ORŲ GRĖSMĖ';el_text.style.color='#e74c3c'; el_sub.textContent='Slėgis sparčiai krenta!'; }
+  if      (score >= 3)  { el_emoji.textContent='☀️';  el_text.textContent='PUIKUS ORAS';       el_text.style.color='#f1c40f'; el_sub.textContent='Slėgis sparčiai kyla'; }
+  else if (score >= 1)  { el_emoji.textContent='🌤️'; el_text.textContent='GERĖJA';            el_text.style.color='#07e000'; el_sub.textContent='Oras turėtų pagerėti'; }
+  else if (score === 0) { el_emoji.textContent='🌥️'; el_text.textContent='STABILUS';          el_text.style.color='#aaa';    el_sub.textContent='Didelių pokyčių nesitikima'; }
+  else if (score >= -2) { el_emoji.textContent='🌧️'; el_text.textContent='BLOGĖJA';           el_text.style.color='#f39c12'; el_sub.textContent='Tikėtini krituliai'; }
+  else if (score >= -3) { el_emoji.textContent='⛈️'; el_text.textContent='TIKĖTINAS LIETUS';  el_text.style.color='#e67e22'; el_sub.textContent='Didėjanti lietaus tikimybė'; }
+  else                  { el_emoji.textContent='🌩️'; el_text.textContent='BLOGŲ ORŲ GRĖSMĖ'; el_text.style.color='#e74c3c'; el_sub.textContent='Slėgis sparčiai krenta!'; }
  
   if (pr) document.getElementById('pfTimeInfo').textContent =
     `Tendencija per ${pr.hours}h · Duomenys iš BMP280`;
@@ -599,6 +697,11 @@ async function fetchOWM() {
     document.getElementById('owmDesc').textContent = d1.weather[0].description;
     document.getElementById('owmFeels').textContent = 'Junta kaip: '+(d1.main.feels_like>0?'+':'')+d1.main.feels_like.toFixed(0)+'°C';
     document.getElementById('owmIcon').textContent = owmEmoji(d1.weather[0].icon);
+    window._owmIcon = d1.weather[0].icon; // Išsaugom dabartinei būklei
+    // Atnaujinti dabartinę būklę su nauja OWM ikona
+    const curLT = document.getElementById('laukTemp').textContent;
+    const curLH = document.getElementById('laukHumi').textContent;
+    calcNowConditions(curLT, curLH.replace('%',''), d1.weather[0].icon);
     document.getElementById('owmHumi').textContent = d1.main.humidity+'%';
     document.getElementById('owmWind').textContent = d1.wind.speed.toFixed(1)+' m/s';
     document.getElementById('owmPressure').textContent = d1.main.pressure+' hPa';
