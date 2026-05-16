@@ -655,6 +655,7 @@ function calcLocalForecast(feeds) {
   }
  
   // ── Balų sistema (griežtesnė) ──────────────
+  let score = 0;
   if (pr) {
     if (pr.diff > 3)   score += 2;  // Slėgis sparčiai kyla = puikus oras
     if (pr.diff > 1)   score += 1;  // Kyla = gerėja
