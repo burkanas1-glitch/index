@@ -411,207 +411,190 @@ function executeZambrettiForecast(feeds, currentTemp, currentHumi) {
   let zSub = "Didesnių permainų nenumatoma";
   let zColor = "var(--tx)";
 
-  // Nustatome kritulių tipą ir žiemos sezono aktyvavimą pagal temperatūrą [cite: 42, 43]
   let precipitationType = "lietus";
-  let isWinter = false;
   if (!isNaN(currentTemp)) {
-    if (currentTemp <= 0.5) {
-      precipitationType = "sniegas"; [cite: 42]
-      isWinter = true;
-    } else if (currentTemp <= 2.5) {
-      precipitationType = "šlapdriba"; [cite: 43]
-      isWinter = true;
-    }
+    if (currentTemp <= 0.5) precipitationType = "sniegas";
+    else if (currentTemp <= 2.5) precipitationType = "šlapdriba";
   }
 
-  if (trendP >= 0.5) { [cite: 44]
+  if (trendP >= 0.5) { 
     if (currentP > 1020) {
-      zTxt = "PUIKUS, GIEDRAS ORAS"; [cite: 44]
-      zEmoji = "☀️"; zColor = "#f1c40f"; zSub = "Aukštas slėgis užtikrina saulėtą dieną"; [cite: 44]
+      zTxt = "PUIKUS, GIEDRAS ORAS";
+      zEmoji = "☀️"; zColor = "#f1c40f"; zSub = "Aukštas slėgis užtikrina saulėtą dieną";
     } else if (currentP >= 1010) {
-      zTxt = "ORAS GERĖJA"; zEmoji = "🌤️"; [cite: 45]
-      zColor = "#07e000"; zSub = "Debesys sklaidosi, slėgis augas"; [cite: 46]
+      zTxt = "ORAS GERĖJA"; zEmoji = "🌤️";
+      zColor = "#07e000"; zSub = "Debesys sklaidosi, slėgis augas";
     } else {
-      zTxt = `TRUMPALAIKIAI KRITULIAI`; [cite: 46]
-      zEmoji = "⛅"; zColor = "#00d4ff"; zSub = `Galima trumpa ${precipitationType}, bet tendencija teigiama`; [cite: 47]
+      zTxt = `TRUMPALAIKIAI KRITULIAI`;
+      zEmoji = "⛅"; zColor = "#00d4ff"; zSub = `Galima trumpa ${precipitationType}, bet tendencija teigiama`;
     }
-  } else if (trendP <= -0.5) { [cite: 48]
+  } else if (trendP <= -0.5) { 
     if (currentP > 1018) {
-      zTxt = "APNIAUKSTA / ORAS VĖSTA"; [cite: 48]
-      zEmoji = "☁️"; zColor = "#94a3b8"; zSub = "Didėja debesuotumas, slėgis krenta"; [cite: 49]
+      zTxt = "APNIAUKSTA / ORAS VĖSTA";
+      zEmoji = "☁️"; zColor = "#94a3b8"; zSub = "Didėja debesuotumas, slėgis krenta";
     } else if (currentP >= 1008) {
-      zTxt = "ORŲ PRASTĖJIMAS"; zEmoji = "🌧️"; [cite: 50]
-      zColor = "#ff6b35"; zSub = `Artėja drėgmės frontas, tikėtinas ${precipitationType}`; [cite: 51]
+      zTxt = "ORŲ PRASTĖJIMAS"; zEmoji = "🌧️";
+      zColor = "#ff6b35"; zSub = `Artėja drėgmės frontas, tikėtinas ${precipitationType}`;
     } else {
-      // Atsižvelgiame į temperatūrą ir atskiriame pūgą nuo liūties
-      if (isWinter) {
-        zTxt = "INTENSYVUS SNIEGAS / PŪGA";
-        zEmoji = "❄️";
-        zSub = "Žemas slėgis ir šaltis. Prognozuojama pūga";
-      } else {
-        zTxt = "STIPRŪS KRITULIAI / LIŪTIS";
-        zEmoji = "⛈️";
-        zSub = "Žemas slėgis. Prognozuojama stipri liūtis, galima perkūnija";
-      }
-      zColor = "#e74c3c";
+      zTxt = `INTENSYVŪS KRITULIAI / AUDRA`; zEmoji = (precipitationType === "sniegas") ? "❄️" : "⛈️"; zColor = "#e74c3c"; zSub = `Žemas slėgis. Prognozuojama pūga arba liūtis`;
     }
-  } else { [cite: 54]
-    if (currentHumi > 82) { [cite: 54]
-      zTxt = `PASTOVŪS KRITULIAI`; [cite: 54]
-      zEmoji = "🌧️"; zColor = "#00d4ff"; zSub = `Aukšta drėgmė palaiko užsitęsusį ${precipitationType}`; [cite: 55]
-    } else if (currentP < 1008) { [cite: 56]
-      zTxt = "STABILIAI BLOGAS ORAS"; zEmoji = "☁️"; [cite: 56]
-      zColor = "#ff6b35"; zSub = "Išlieka žemo slėgio sūkurio įtaka"; [cite: 57]
+  } else { 
+    if (currentHumi > 82) {
+      zTxt = `PASTOVŪS KRITULIAI`;
+      zEmoji = "🌧️"; zColor = "#00d4ff"; zSub = `Aukšta drėgmė palaiko užsitęsusį ${precipitationType}`;
+    } else if (currentP < 1008) {
+      zTxt = "STABILIAI BLOGAS ORAS"; zEmoji = "☁️";
+      zColor = "#ff6b35"; zSub = "Išlieka žemo slėgio sūkurio įtaka";
     } else {
-      zTxt = "STABILŪS, RAMŪS ORAI"; zEmoji = "🌥️"; zColor = "var(--tx)"; [cite: 58]
-      zSub = `Slėgis pastovus. Tendencija įvertinta per ${hDiff}h`; [cite: 59]
+      zTxt = "STABILŪS, RAMŪS ORAI"; zEmoji = "🌥️"; zColor = "var(--tx)";
+      zSub = `Slėgis pastovus. Tendencija įvertinta per ${hDiff}h`;
     }
   }
 
-  if (globalWindSpeed >= 14) { [cite: 59]
-    zEmoji = "⚠️"; [cite: 59]
-    zTxt = "STIPRUS VĖJAS / AUDRA"; [cite: 60]
+  if (globalWindSpeed >= 14) {
+    zEmoji = "⚠️";
+    zTxt = "STIPRUS VĖJAS / AUDRA";
     zColor = "#e74c3c";
-    zSub = `Gūsiai siekia ${globalWindSpeed} m/s! Saugokitės gūsių`; [cite: 60]
+    zSub = `Gūsiai siekia ${globalWindSpeed} m/s! Saugokitės gūsių`;
   }
 
-  document.getElementById('localForecastEmoji').textContent = zEmoji; [cite: 61]
-  document.getElementById('localForecastText').textContent = zTxt; [cite: 61]
-  document.getElementById('localForecastText').style.color = zColor; [cite: 61]
-  document.getElementById('localForecastSub').textContent = zSub; [cite: 61]
+  document.getElementById('localForecastEmoji').textContent = zEmoji;
+  document.getElementById('localForecastText').textContent = zTxt;
+  document.getElementById('localForecastText').style.color = zColor;
+  document.getElementById('localForecastSub').textContent = zSub;
 }
 
 async function fetchCharts() {
   let url;
-  if (mode === 'date') { [cite: 62]
-    const d = picker.value; [cite: 62]
-    url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&start=${d}T00:00:00Z&end=${d}T23:59:59Z&results=8000`; [cite: 63]
+  if (mode === 'date') {
+    const d = picker.value;
+    url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&start=${d}T00:00:00Z&end=${d}T23:59:59Z&results=8000`;
   } else {
-    url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=${periodMap[currentPeriod].results}`; [cite: 63]
+    url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=${periodMap[currentPeriod].results}`;
   }
   try {
-    const res = await fetch(url); [cite: 64]
-    const data = await res.json(); [cite: 64]
-    const feeds = data.feeds || []; [cite: 65]
-    const labels=[], vT=[], vH=[], lT=[], lH=[], pr=[]; [cite: 65]
-    feeds.forEach(f => { [cite: 66]
-      const t = new Date(f.created_at); [cite: 66]
-      labels.push(t.toLocaleTimeString('lt-LT',{hour:'2-digit',minute:'2-digit'})); [cite: 66]
-      vT.push(f.field1?parseFloat(f.field1):null); [cite: 66]
-      vH.push(f.field2?parseFloat(f.field2):null); [cite: 66]
-      lT.push(f.field3?parseFloat(f.field3):null); [cite: 66]
-      lH.push(f.field4?parseFloat(f.field4):null); [cite: 66]
-      pr.push(f.field5?parseFloat(f.field5):null); [cite: 66]
+    const res = await fetch(url);
+    const data = await res.json();
+    const feeds = data.feeds || [];
+    const labels=[], vT=[], vH=[], lT=[], lH=[], pr=[];
+    feeds.forEach(f => {
+      const t = new Date(f.created_at);
+      labels.push(t.toLocaleTimeString('lt-LT',{hour:'2-digit',minute:'2-digit'}));
+      vT.push(f.field1?parseFloat(f.field1):null);
+      vH.push(f.field2?parseFloat(f.field2):null);
+      lT.push(f.field3?parseFloat(f.field3):null);
+      lH.push(f.field4?parseFloat(f.field4):null);
+      pr.push(f.field5?parseFloat(f.field5):null);
     });
-    tempChart.data.labels = labels; [cite: 67]
-    tempChart.data.datasets[0].data = vT; [cite: 67]
-    tempChart.data.datasets[1].data = lT; [cite: 67]
-    tempChart.update(); [cite: 67]
-    humiChart.data.labels = labels; [cite: 67]
-    humiChart.data.datasets[0].data = vH; [cite: 67]
-    humiChart.data.datasets[1].data = lH; [cite: 67]
-    humiChart.update(); [cite: 67]
-    pressChart.data.labels = labels; [cite: 68]
-    pressChart.data.datasets[0].data = pr; [cite: 68]
-    pressChart.update(); [cite: 68]
+    tempChart.data.labels = labels;
+    tempChart.data.datasets[0].data = vT;
+    tempChart.data.datasets[1].data = lT;
+    tempChart.update();
+    humiChart.data.labels = labels;
+    humiChart.data.datasets[0].data = vH;
+    humiChart.data.datasets[1].data = lH;
+    humiChart.update();
+    pressChart.data.labels = labels;
+    pressChart.data.datasets[0].data = pr;
+    pressChart.update();
 
-    const stat = (arr, id1, id2, id3, sfx) => { [cite: 68]
-      const v = arr.filter(x=>x!==null); [cite: 68]
-      if (!v.length) return; [cite: 69]
-      document.getElementById(id1).textContent = Math.min(...v).toFixed(1)+sfx; [cite: 69]
-      document.getElementById(id2).textContent = (v.reduce((a,b)=>a+b,0)/v.length).toFixed(1)+sfx; [cite: 69]
-      document.getElementById(id3).textContent = Math.max(...v).toFixed(1)+sfx; [cite: 69]
+    const stat = (arr, id1, id2, id3, sfx) => {
+      const v = arr.filter(x=>x!==null);
+      if (!v.length) return;
+      document.getElementById(id1).textContent = Math.min(...v).toFixed(1)+sfx;
+      document.getElementById(id2).textContent = (v.reduce((a,b)=>a+b,0)/v.length).toFixed(1)+sfx;
+      document.getElementById(id3).textContent = Math.max(...v).toFixed(1)+sfx;
     };
-    stat(vT,'tempMin','tempAvg','tempMax','°'); [cite: 69]
-    stat(vH,'humiMin','humiAvg','humiMax','%'); [cite: 69]
-    stat(pr,'pressMin','pressAvg','pressMax',' hPa'); [cite: 69]
-  } catch(e) { console.error(e); } [cite: 70]
+    stat(vT,'tempMin','tempAvg','tempMax','°');
+    stat(vH,'humiMin','humiAvg','humiMax','%');
+    stat(pr,'pressMin','pressAvg','pressMax',' hPa');
+  } catch(e) { console.error(e); }
 }
 
 async function fetchData() {
   try {
-    const resp = await fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=120`); [cite: 70]
-    if (!resp.ok) throw new Error('ThingSpeak klaida'); [cite: 71]
-    const data = await resp.json(); [cite: 71]
-    const feeds = data.feeds || []; [cite: 71]
-    const get = field => { [cite: 72]
-      for (let i=feeds.length-1;i>=0;i--) [cite: 72]
-        if (feeds[i][field]!=null && feeds[i][field]!=='') return parseFloat(feeds[i][field]); [cite: 72]
-      return NaN; [cite: 73]
+    const resp = await fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=120`);
+    if (!resp.ok) throw new Error('ThingSpeak klaida');
+    const data = await resp.json();
+    const feeds = data.feeds || [];
+    const get = field => {
+      for (let i=feeds.length-1;i>=0;i--)
+        if (feeds[i][field]!=null && feeds[i][field]!=='') return parseFloat(feeds[i][field]);
+      return NaN;
     };
     
-    const vT=get('field1'), vH=get('field2'), lT=get('field3'), lH=get('field4'), pr=get('field5'); [cite: 73]
+    const vT=get('field1'), vH=get('field2'), lT=get('field3'), lH=get('field4'), pr=get('field5');
 
-    document.getElementById('vidTemp').textContent = isNaN(vT)?'--':vT.toFixed(1); [cite: 73]
-    document.getElementById('vidHumi').textContent = isNaN(vH)?'--%':vH.toFixed(1)+'%'; [cite: 73]
-    document.getElementById('vidHumiBar').style.width = isNaN(vH)?'0%':vH+'%'; [cite: 73]
-    document.getElementById('laukTemp').textContent = isNaN(lT)?'--':lT.toFixed(1); [cite: 74]
-    document.getElementById('laukHumi').textContent = isNaN(lH)?'--%':lH.toFixed(1)+'%'; [cite: 74]
-    document.getElementById('laukHumiBar').style.width = isNaN(lH)?'0%':lH+'%'; [cite: 74]
-    document.getElementById('currentLivePressure').textContent = isNaN(pr)?'-- hPa':pr.toFixed(1)+' hPa'; [cite: 74]
+    document.getElementById('vidTemp').textContent = isNaN(vT)?'--':vT.toFixed(1);
+    document.getElementById('vidHumi').textContent = isNaN(vH)?'--%':vH.toFixed(1)+'%';
+    document.getElementById('vidHumiBar').style.width = isNaN(vH)?'0%':vH+'%';
+    document.getElementById('laukTemp').textContent = isNaN(lT)?'--':lT.toFixed(1);
+    document.getElementById('laukHumi').textContent = isNaN(lH)?'--%':lH.toFixed(1)+'%';
+    document.getElementById('laukHumiBar').style.width = isNaN(lH)?'0%':lH+'%';
+    document.getElementById('currentLivePressure').textContent = isNaN(pr)?'-- hPa':pr.toFixed(1)+' hPa';
 
-    const cv = comfort(vT, vH); [cite: 74]
-    const cl = comfort(lT, lH); [cite: 75]
-    document.getElementById('vidComfort').textContent = cv.txt; document.getElementById('vidComfort').style.background = cv.bg; [cite: 75]
-    document.getElementById('laukComfort').textContent = cl.txt; document.getElementById('laukComfort').style.background = cl.bg; [cite: 75]
-    const now = new Date(); [cite: 76]
-    document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('lt-LT',{hour:'2-digit',minute:'2-digit'}); [cite: 76]
-    document.getElementById('statusText').textContent = 'Gyvas · '+now.toLocaleDateString('lt-LT'); [cite: 76]
+    const cv = comfort(vT, vH);
+    const cl = comfort(lT, lH);
+    document.getElementById('vidComfort').textContent = cv.txt; document.getElementById('vidComfort').style.background = cv.bg;
+    document.getElementById('laukComfort').textContent = cl.txt; document.getElementById('laukComfort').style.background = cl.bg;
+    const now = new Date();
+    document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('lt-LT',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('statusText').textContent = 'Gyvas · '+now.toLocaleDateString('lt-LT');
 
-    executeZambrettiForecast(feeds, lT, lH); [cite: 76]
-  } catch(e) { [cite: 77]
-    console.error(e); [cite: 77]
-    document.getElementById('statusText').textContent = 'Klaida'; [cite: 77]
+    executeZambrettiForecast(feeds, lT, lH);
+  } catch(e) {
+    console.error(e);
+    document.getElementById('statusText').textContent = 'Klaida';
   }
 }
 
 async function fetchOWM() {
   try {
-    const r1 = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${OWM_CITY}&appid=${OWM_KEY}&units=metric&lang=lt`); [cite: 78]
-    const d1 = await r1.json(); [cite: 78]
-    document.getElementById('owmTemp').textContent = (d1.main.temp>0?'+':'')+d1.main.temp.toFixed(0)+'°'; [cite: 79]
-    document.getElementById('owmDesc').textContent = d1.weather[0].description; [cite: 79]
-    document.getElementById('owmFeels').textContent = 'Junta kaip: '+(d1.main.feels_like>0?'+':'')+d1.main.feels_like.toFixed(0)+'°C'; [cite: 79]
-    document.getElementById('owmIcon').textContent = owmEmoji(d1.weather[0].icon); [cite: 79]
-    document.getElementById('owmHumi').textContent = d1.main.humidity+'%'; [cite: 79]
+    const r1 = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${OWM_CITY}&appid=${OWM_KEY}&units=metric&lang=lt`);
+    const d1 = await r1.json();
+    document.getElementById('owmTemp').textContent = (d1.main.temp>0?'+':'')+d1.main.temp.toFixed(0)+'°';
+    document.getElementById('owmDesc').textContent = d1.weather[0].description;
+    document.getElementById('owmFeels').textContent = 'Junta kaip: '+(d1.main.feels_like>0?'+':'')+d1.main.feels_like.toFixed(0)+'°C';
+    document.getElementById('owmIcon').textContent = owmEmoji(d1.weather[0].icon);
+    document.getElementById('owmHumi').textContent = d1.main.humidity+'%';
     
-    globalWindSpeed = d1.wind.speed; [cite: 79]
-    document.getElementById('owmWind').textContent = d1.wind.speed.toFixed(1)+' m/s'; [cite: 80]
-    document.getElementById('owmPressure').textContent = d1.main.pressure+' hPa'; [cite: 80]
-    document.getElementById('owmClouds').textContent = d1.clouds.all+'%'; [cite: 80]
+    globalWindSpeed = d1.wind.speed;
+    document.getElementById('owmWind').textContent = d1.wind.speed.toFixed(1)+' m/s';
+    document.getElementById('owmPressure').textContent = d1.main.pressure+' hPa';
+    document.getElementById('owmClouds').textContent = d1.clouds.all+'%';
 
-    const r2 = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${OWM_CITY}&appid=${OWM_KEY}&units=metric`); [cite: 80]
-    const d2 = await r2.json(); [cite: 81]
-    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1); [cite: 81]
-    const tDay = tomorrow.toISOString().split('T')[0]; [cite: 81]
-    let tMax=-99, tMin=99; [cite: 81]
-    d2.list.forEach(item => { [cite: 82]
-      if (item.dt_txt.startsWith(tDay)) { [cite: 82]
-        if (item.main.temp_max > tMax) tMax = item.main.temp_max; [cite: 82]
-        if (item.main.temp_min < tMin) tMin = item.main.temp_min; [cite: 82]
+    const r2 = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${OWM_CITY}&appid=${OWM_KEY}&units=metric`);
+    const d2 = await r2.json();
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+    const tDay = tomorrow.toISOString().split('T')[0];
+    let tMax=-99, tMin=99;
+    d2.list.forEach(item => {
+      if (item.dt_txt.startsWith(tDay)) {
+        if (item.main.temp_max > tMax) tMax = item.main.temp_max;
+        if (item.main.temp_min < tMin) tMin = item.main.temp_min;
       }
     });
-    if (tMax !== -99) document.getElementById('fcMax').textContent = (tMax>0?'+':'')+tMax.toFixed(0)+'°'; [cite: 83]
-    if (tMin !== 99)  document.getElementById('fcMin').textContent = (tMin>0?'+':'')+tMin.toFixed(0)+'°'; [cite: 83]
+    if (tMax !== -99) document.getElementById('fcMax').textContent = (tMax>0?'+':'')+tMax.toFixed(0)+'°';
+    if (tMin !== 99)  document.getElementById('fcMin').textContent = (tMin>0?'+':'')+tMin.toFixed(0)+'°';
 
-  } catch(e) { console.error(e); } [cite: 83]
+  } catch(e) { console.error(e); }
 }
 
 async function fetchAll() {
-  const btn = document.getElementById('refreshBtn'); [cite: 84]
-  btn.textContent = '↻  Kraunama...'; [cite: 84]
-  btn.style.opacity = '0.5'; [cite: 84]
-  await Promise.all([fetchData(), fetchOWM()]); [cite: 84]
-  if (chartsVisible) await fetchCharts(); [cite: 85]
-  btn.textContent = '↻  Atnaujinti duomenis'; [cite: 85]
-  btn.style.opacity = '1'; [cite: 85]
+  const btn = document.getElementById('refreshBtn');
+  btn.textContent = '↻  Kraunama...';
+  btn.style.opacity = '0.5';
+  await Promise.all([fetchData(), fetchOWM()]);
+  if (chartsVisible) await fetchCharts();
+  btn.textContent = '↻  Atnaujinti duomenis';
+  btn.style.opacity = '1';
 }
 
 // Inicijavimas paleidžiant
-fetchAll(); [cite: 85]
-setInterval(fetchData, 30000); [cite: 85]
-setInterval(fetchOWM, 600000); [cite: 85]
-setInterval(() => { if (chartsVisible) fetchCharts(); }, 60000); [cite: 86]
+fetchAll();
+setInterval(fetchData, 30000);
+setInterval(fetchOWM, 600000);
+setInterval(() => { if (chartsVisible) fetchCharts(); }, 60000);
 </script>
 </body>
 </html>
