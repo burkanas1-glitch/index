@@ -539,89 +539,11 @@ async function fetchData() {
  
     // ── Vietinė prognozė iš visų trijų daviklių ──
     calcLocalForecast(feeds);
-    // Dabartinė būklė
-    calcNowConditions(lT, lH, window._owmIcon || '');
  
   } catch(e) {
     console.error('fetchData klaida:', e);
     document.getElementById('statusText').textContent = 'Klaida: ' + e.message;
   }
-}
- 
-function calcNowConditions(tempL, humiL, owmIcon) {
-  // Dabartinė būklė iš lauko daviklių + OWM ikonos
-  const t = parseFloat(tempL);
-  const h = parseFloat(humiL);
-  const icon = owmIcon || '';
- 
-  // Ar naktis?
-  const hr = new Date().getHours();
-  const isNight = hr >= 22 || hr < 6;
-  const isEvening = hr >= 20 || hr < 8;
- 
-  let emoji = '⛅', text = 'KINTAMA', sub = '', color = 'var(--tx)';
- 
-  // Iš OWM ikonos žinome ar lyja/sninga
-  const isRain  = icon.startsWith('09') || icon.startsWith('10');
-  const isSnow  = icon.startsWith('13');
-  const isThund = icon.startsWith('11');
-  const isFog   = icon.startsWith('50');
-  const isClear = icon.startsWith('01');
-  const isCloudy= icon.startsWith('03') || icon.startsWith('04');
-  const isPCloudy=icon.startsWith('02');
- 
-  // Temperatūros kategorija
-  if (!isNaN(t)) {
-    if (t <= -15) {
-      emoji = '🥶'; text = 'SPEIGAS'; sub = t.toFixed(1)+'°C'; color = '#00d4ff';
-    } else if (t < 0) {
-      emoji = isSnow ? '❄️' : '🌨️';
-      text = isSnow ? 'SNINGA' : 'ŠALTA';
-      sub = t.toFixed(1)+'°C';
-      color = '#4fc3f7';
-    } else if (isRain) {
-      if (t < 5) { emoji = '🌨️'; text = 'ŠLAPDRIBA'; color = '#4fc3f7'; }
-      else       { emoji = '🌧️'; text = 'LYJA';      color = '#3498db'; }
-      sub = t.toFixed(1)+'°C';
-    } else if (isThund) {
-      emoji = '⛈️'; text = 'AUDRA'; sub = t.toFixed(1)+'°C'; color = '#e74c3c';
-    } else if (isFog) {
-      emoji = '🌫️'; text = 'RŪKAS'; sub = t.toFixed(1)+'°C'; color = '#aaa';
-    } else if (isCloudy) {
-      emoji = '☁️'; text = 'DEBESUOTA'; sub = t.toFixed(1)+'°C'; color = '#aaa';
-    } else if (isPCloudy) {
-      emoji = isNight ? '🌙' : '🌤️';
-      text = isNight ? 'NAKTIS' : 'IS DALIES DEBESUOTA';
-      sub = t.toFixed(1)+'°C'; color = isNight ? '#9b59b6' : '#f39c12';
-    } else if (isClear) {
-      if (isNight) {
-        // Žvaigždėta naktis tik jei drėgmė maža
-        if (!isNaN(h) && h < 60) {
-          emoji = '🌟'; text = 'ŽVAIGŽDĖTA'; color = '#f1c40f';
-        } else {
-          emoji = '🌙'; text = 'NAKTIS'; color = '#9b59b6';
-        }
-      } else {
-        emoji = '☀️'; text = 'GIEDRA'; color = '#f1c40f';
-      }
-      sub = t.toFixed(1)+'°C';
-    } else {
-      // Nėra OWM ikonos – sprendžiame iš drėgmės
-      if (!isNaN(h)) {
-        if (h > 90) { emoji = '🌧️'; text = 'TIKĖTINAS LIETUS'; color = '#3498db'; }
-        else if (h > 80) { emoji = '☁️'; text = 'DEBESUOTA'; color = '#aaa'; }
-        else if (h < 40) { emoji = isNight ? '🌙' : '☀️'; text = isNight ? 'NAKTIS' : 'GIEDRA'; color = '#f1c40f'; }
-        else { emoji = '⛅'; text = 'KINTAMA'; color = 'var(--tx)'; }
-        sub = t.toFixed(1)+'°C';
-      }
-    }
-  }
- 
-  document.getElementById('nowEmoji').textContent = emoji;
-  const nowText = document.getElementById('nowText');
-  nowText.textContent = text;
-  nowText.style.color = color;
-  document.getElementById('nowSub').textContent = sub;
 }
  
 function calcLocalForecast(feeds) {
@@ -730,12 +652,6 @@ async function fetchOWM() {
     document.getElementById('owmFeels').textContent = 'Junta kaip: '+(d1.main.feels_like>0?'+':'')+d1.main.feels_like.toFixed(0)+'°C';
     document.getElementById('owmIcon').textContent = owmEmoji(d1.weather[0].icon);
     window._owmIcon = d1.weather[0].icon; // Išsaugom dabartinei būklei
-    // Atnaujinti dabartinę būklę su nauja OWM ikona
-    const curLT = document.getElementById('laukTemp').textContent;
-    const curLH = document.getElementById('laukHumi').textContent;
-    calcNowConditions(curLT, curLH.replace('%',''), d1.weather[0].icon);
-    document.getElementById('owmHumi').textContent = d1.main.humidity+'%';
-    document.getElementById('owmWind').textContent = d1.wind.speed.toFixed(1)+' m/s';
     document.getElementById('owmPressure').textContent = d1.main.pressure+' hPa';
     document.getElementById('owmClouds').textContent = d1.clouds.all+'%';
  
