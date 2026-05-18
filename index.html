@@ -111,11 +111,11 @@
   </div>
 
   <script>
-    // --- KONFIGŪRACIJA (Tavo tikrieji veikiantys raktai) ---
- const CHANNEL_ID  = '3294006';
-const READ_API_KEY = 'Y67A8GD4V5FINMWW';
-const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomis raidėmis saugumui / standartui
-
+    // --- KONFIGŪRACIJA (Tavo tikrieji veikiantys rekvizitai) ---
+    const CHANNEL_ID    = '3294006';
+    const READ_API_KEY  = 'Y67A8GD4V5FINMWW';
+    const OWM_KEY       = 'a8120352ed2ca3d49994a73a13471108';
+    const OWM_CITY      = 'Pakruojis,LT';
 
     // Globalūs kintamieji algoritmų sujungimui
     let globalWindSpeed = 0;
@@ -124,7 +124,7 @@ const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomi
     let chartsVisible = false;
     let tempChart, humiChart, presChart;
 
-    // Apsauga nuo tuščių reikšmių iš tavo senojo kodo
+    // Patikima reikšmių gavimo funkcija iš tavo kodo (apsauga nuo tuščių langelių)
     function getVal(feed, field) {
       if(!feed) return null;
       let v = feed[field];
@@ -146,7 +146,7 @@ const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomi
       return '⛅';
     }
 
-    // --- PAGRINDINIS DUOMENŲ SURINKIMAS (Tavo patikima logika) ---
+    // --- DUOMENŲ PAĖMIMAS IŠ THINGSPEAK ---
     async function fetchData() {
       try {
         const resp = await fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=120`);
@@ -155,7 +155,7 @@ const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomi
         const feeds = data.feeds || [];
         if (feeds.length === 0) return;
 
-        // Ieškome paskutinių realių reikšmių (Apsauga nuo nulių)
+        // Ieškome paskutinių realių reikšmių iš galo
         let vT=null, vH=null, lT=null, lH=null, pr=null, lastValidTime=null;
         for (let i = feeds.length - 1; i >= 0; i--) {
           let f = feeds[i];
@@ -177,17 +177,16 @@ const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomi
         if(lH!==null) document.getElementById('laukHumi').textContent = Math.round(lH) + ' %';
         if(pr!==null) document.getElementById('laukPres').textContent = Math.round(pr) + ' hPa';
 
-        // Laiko atvaizdavimas
+        // Laiko žyma
         if (lastValidTime) {
           const d = new Date(lastValidTime);
           document.getElementById('tsTime').textContent = `Kiemas atnaujintas: ${d.toLocaleTimeString('lt-LT')}`;
         }
 
-        // Slėgio tendencijos skaičiavimas per 3 valandas (iš tavo kodo)
+        // Slėgio tendencija per 3 valandas (~12 įrašų atgal)
         let trend = 0.0;
         if (feeds.length >= 12 && pr !== null) {
           let pastPres = null;
-          // Ieškome slėgio reikšmės prieš ~3 valandas (12 įrašų atgal)
           let targetIndex = feeds.length - 12;
           for(let i = targetIndex; i >= 0; i--) {
             pastPres = getVal(feeds[i], 'field5');
@@ -199,10 +198,10 @@ const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomi
         }
         document.getElementById('presTrend').textContent = (trend >= 0 ? '+' : '') + trend.toFixed(1) + ' hPa/3h';
 
-        // Paleidžiame vietinį Zambretti algoritmą
+        // Paleidžiame Zambretti skaičiavimą
         executeZambrettiForecast(pr, trend, lT, lH);
 
-        // Jei grafikai atverti, atnaujiname juos
+        // Grafikų atnaujinimas
         if (chartsVisible) {
           updateCharts(feeds);
         }
@@ -212,10 +211,10 @@ const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomi
       }
     }
 
-    // --- INTERNETINIAI ORAI (OWM API) - IŠTAISYTA VERSIJA ---
+    // --- INTERNETINIAI ORAI (OPENWEATHERMAP API - Saugus ir sutvarkytas) ---
     async function fetchOWM() {
       try {
-        // 1. Dabartiniai orai regionui
+        // 1. Dabartiniai orai
         const r1 = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${OWM_CITY}&appid=${OWM_KEY}&units=metric`);
         if (!r1.ok) throw new Error('OWM dabartinių orų klaida');
         const d1 = await r1.json();
@@ -225,7 +224,7 @@ const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomi
         if (!r2.ok) throw new Error('OWM prognozės klaida');
         const d2 = await r2.json();
 
-        // Tikriname ir išvedame dabartinius orus
+        // Atvaizduojame dabartinius orus
         if (d1 && d1.main) {
           document.getElementById('owmCurr').textContent = d1.main.temp.toFixed(1) + ' °C';
           
@@ -234,7 +233,7 @@ const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomi
             document.getElementById('owmTime').textContent = `Meteo regionas: ${d1.weather[0].description}`;
           }
           
-          // TRIJŲ LYGIŲ VĖJO VIZUALIZACIJA (Sutvarkyta)
+          // TRIJŲ LYGIŲ VĖJO APDOROJIMAS
           if (d1.wind) {
             const wind = d1.wind.speed;
             globalWindSpeed = wind;
@@ -250,12 +249,11 @@ const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomi
           }
         }
 
-        // Tikriname ir skaičiuojame rytojaus Max/Min
+        // Skaičiuojame rytojaus Max/Min iš sąrašo safely
         if (d2 && d2.list && d2.list.length > 0) {
           let maxTemp = -99;
           let minTemp = 99;
-          // Paimame artimiausias 8 pozicijas (~24 valandas)
-          const limit = Math.min(d2.list.length, 8);
+          const limit = Math.min(d2.list.length, 8); // artimiausios 24 valandos
           for (let i = 0; i < limit; i++) {
             const f = d2.list[i];
             if (f.main) {
@@ -267,40 +265,8 @@ const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomi
           document.getElementById('fcMin').textContent = minTemp !== 99 ? minTemp.toFixed(1) + ' °C' : '--.- °C';
         }
       } catch (err) {
-        console.error("OWM klaida kodo viduje:", err);
-        document.getElementById('owmTime').textContent = "Nepavyko atnaujinti OWM";
-      }
-    }
-          
-          // TRIJŲ LYGIŲ VĖJO VIZUALIZACIJA
-          const wind = d1.wind.speed;
-          globalWindSpeed = wind;
-          const windEl = document.getElementById('owmWind');
-          
-          if (wind >= 14) {
-            windEl.innerHTML = `🌪️ <span style="color:#e74c3c; font-weight:800;">${wind.toFixed(1)} m/s</span>`;
-          } else if (wind >= 8) {
-            windEl.innerHTML = `💨 <span style="color:#f39c12; font-weight:600;">${wind.toFixed(1)} m/s</span>`;
-          } else {
-            windEl.innerHTML = `🍃 ${wind.toFixed(1)} m/s`;
-          }
-          
-          document.getElementById('owmTime').textContent = `Meteo regionas: ${d1.weather[0].description}`;
-        }
-
-        if (d2.list) {
-          let maxTemp = -99;
-          let minTemp = 99;
-          for (let i = 0; i < 8; i++) {
-            const f = d2.list[i];
-            if (f.main.temp_max > maxTemp) maxTemp = f.main.temp_max;
-            if (f.main.temp_min < minTemp) minTemp = f.main.temp_min;
-          }
-          document.getElementById('fcMax').textContent = maxTemp.toFixed(1) + ' °C';
-          document.getElementById('fcMin').textContent = minTemp.toFixed(1) + ' °C';
-        }
-      } catch (err) {
-        console.error("OWM klaida:", err);
+        console.error("Klaida OWM funkcijoje:", err);
+        document.getElementById('owmTime').textContent = "Nepavyko gauti regiono orų";
       }
     }
 
@@ -358,14 +324,14 @@ const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomi
         }
       }
 
-      // ŽIEMOS FILTRAS
+      // Žiemos korekcija sniegui
       if (temp !== null && temp <= 1 && (zTxt.includes("Lietus") || zTxt.includes("krituliai"))) {
         zEmoji = "❄️";
         zTxt = zTxt.replace("Lietus", "Sniegas / Šlapdriba");
         zSub = "Esant žemai temperatūrai tikėtinas sniegas";
       }
 
-      // AUDROS FILTRAS (OWM)
+      // Audros saugiklis pagal vėją
       if (globalWindSpeed >= 14) {
         zEmoji = "⚠️";
         zTxt = "STIPRUS VĖJAS / AUDRA";
@@ -373,14 +339,14 @@ const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomi
         zSub = `Gūsiai siekia ${globalWindSpeed} m/s! Saugokite daiktus lauke`;
       }
 
-      // Atvaizduojame rezultatus
+      // Atnaujiname kortelės stilių
       document.getElementById('zEmoji').textContent = zEmoji;
       document.getElementById('zTxt').textContent = zTxt;
       document.getElementById('zSub').textContent = zSub;
       card.style.borderLeftColor = zColor;
     }
 
-    // --- GRAFIKŲ STRUKTŪRA ---
+    // --- GRAFIKAI ---
     function toggleCharts() {
       const wrapper = document.getElementById('chartsWrapper');
       const btn = document.getElementById('toggleChartsBtn');
@@ -459,12 +425,12 @@ const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomi
       presChart.update('none');
     }
 
-    // --- LAIKO CIKLAI ---
+    // --- INTERVAlAI IR PALEIDIMAS ---
     fetchData();
-    setInterval(fetchData, 30000);
+    setInterval(fetchData, 30000); // Kiemas kas 30 s
 
     fetchOWM();
-    setInterval(fetchOWM, 600000);
+    setInterval(fetchOWM, 600000); // Regionas kas 10 min
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
