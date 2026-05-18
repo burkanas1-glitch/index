@@ -411,10 +411,17 @@ function executeZambrettiForecast(feeds, currentTemp, currentHumi) {
   let zSub = "Didesnių permainų nenumatoma";
   let zColor = "var(--tx)";
 
+  // Nustatome kritulių tipą pagal temperatūrą
   let precipitationType = "lietus";
+  let isWinter = false;
   if (!isNaN(currentTemp)) {
-    if (currentTemp <= 0.5) precipitationType = "sniegas";
-    else if (currentTemp <= 2.5) precipitationType = "šlapdriba";
+    if (currentTemp <= 0.5) {
+      precipitationType = "sniegas";
+      isWinter = true;
+    } else if (currentTemp <= 2.5) {
+      precipitationType = "šlapdriba";
+      isWinter = true;
+    }
   }
 
   if (trendP >= 0.5) { 
@@ -436,7 +443,17 @@ function executeZambrettiForecast(feeds, currentTemp, currentHumi) {
       zTxt = "ORŲ PRASTĖJIMAS"; zEmoji = "🌧️";
       zColor = "#ff6b35"; zSub = `Artėja drėgmės frontas, tikėtinas ${precipitationType}`;
     } else {
-      zTxt = `INTENSYVŪS KRITULIAI / AUDRA`; zEmoji = (precipitationType === "sniegas") ? "❄️" : "⛈️"; zColor = "#e74c3c"; zSub = `Žemas slėgis. Prognozuojama pūga arba liūtis`;
+      // ŠTAI ČIA: Atsižvelgiame į temperatūrą ir atskiriame pūgą nuo liūties
+      if (isWinter) {
+        zTxt = "INTENSYVUS SNIEGAS / PŪGA";
+        zEmoji = "❄️";
+        zSub = "Žemas slėgis ir šaltis. Prognozuojama pūga";
+      } else {
+        zTxt = "STIPRŪS KRITULIAI / LIŪTIS";
+        zEmoji = "⛈️";
+        zSub = "Žemas slėgis. Prognozuojama stipri liūtis, galima perkūnija";
+      }
+      zColor = "#e74c3c";
     }
   } else { 
     if (currentHumi > 82) {
