@@ -10,683 +10,732 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--bg:#0a0e1a;--card:#111827;--border:#1e2d45;--a1:#00d4ff;--a2:#ff6b35;--a3:#39ff14;--tx:#e2e8f0;--mu:#4a6080;}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--tx);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
-.container{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:24px 16px;}
-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;animation:fadeDown .6s ease both;}
-.title{font-size:11px;font-family:'Space Mono',monospace;letter-spacing:3px;color:var(--a1);text-transform:uppercase;margin-bottom:4px;}
-h1{font-size:28px;font-weight:800;line-height:1;color:var(--tx);}
-.status{display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:10px;color:var(--a3);margin-top:8px;}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--a3);animation:pulse 2s infinite;}
-.update-time{font-family:'Space Mono',monospace;font-size:10px;color:var(--mu);text-align:right;}
-.section-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--mu);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;position:relative;overflow:hidden;}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.card.vidus::before{background:linear-gradient(90deg,var(--a1),transparent);}
-.card.lauke::before{background:linear-gradient(90deg,var(--a2),transparent);}
-.temp-display{display:flex;flex-direction:column;gap:4px;}
-.temp-icon{font-size:28px;margin-bottom:4px;}
-.temp-value{font-family:'Space Mono',monospace;font-size:48px;font-weight:700;line-height:1;color:var(--a1);transition:all .5s ease;}
-.card.lauke .temp-value{color:var(--a2);}
-.temp-unit{font-size:20px;color:var(--mu);vertical-align:super;font-family:'Space Mono',monospace;}
-.temp-label{font-size:11px;color:var(--mu);font-family:'Space Mono',monospace;letter-spacing:1px;}
-.humi-section{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
-.humi-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.humi-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--mu);letter-spacing:1px;}
-.humi-value{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--a1);transition:all .5s ease;}
-.card.lauke .humi-value{color:var(--a2);}
-.humi-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
-.humi-fill{height:100%;background:var(--a1);border-radius:2px;transition:width 1s ease;}
-.card.lauke .humi-fill{background:var(--a2);}
-.comfort-bar{margin-top:12px;padding:6px 0;border-radius:8px;text-align:center;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:2px;color:#000;transition:all .5s ease;}
- 
-/* Slėgis */
-.pressure-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px;position:relative;overflow:hidden;}
-.pressure-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#9b59b6,transparent);}
-.pressure-main{display:flex;justify-content:space-between;align-items:center;}
-.pressure-val{font-family:'Space Mono',monospace;font-size:36px;font-weight:700;color:#9b59b6;}
-.pressure-unit{font-family:'Space Mono',monospace;font-size:14px;color:var(--mu);}
-.pressure-trend{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;border:1px solid;}
- 
-/* OWM */
-.owm-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px;position:relative;overflow:hidden;}
-.owm-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#f39c12,#e74c3c,transparent);}
-.owm-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);}
-.owm-temp{font-family:'Space Mono',monospace;font-size:40px;font-weight:700;color:#f39c12;}
-.owm-desc{font-family:'Space Mono',monospace;font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
-.owm-feels{font-family:'Space Mono',monospace;font-size:10px;color:var(--mu);margin-top:2px;}
-.owm-icon{font-size:40px;}
-.owm-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);}
-.owm-item-lbl{font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:1px;margin-bottom:2px;}
-.owm-item-val{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--tx);}
-.owm-forecast{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.owm-fc-block{text-align:center;background:rgba(255,255,255,.03);border-radius:8px;padding:10px;}
-.owm-fc-lbl{font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);margin-bottom:4px;}
-.owm-fc-temp{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;}
- 
-/* Grafikai */
-.chart-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px;position:relative;overflow:hidden;}
-.chart-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.chart-card.temp-chart::before{background:linear-gradient(90deg,var(--a1),var(--a2),transparent);}
-.chart-card.humi-chart::before{background:linear-gradient(90deg,#4fc3f7,transparent);}
-.chart-card.press-chart::before{background:linear-gradient(90deg,#9b59b6,transparent);}
-.chart-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--mu);text-transform:uppercase;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
-.chart-title .period-label{color:var(--a3);font-size:9px;}
-.chart-container{position:relative;height:150px;}
-.chart-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
-.chart-stat{text-align:center;}
-.chart-stat-val{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;}
-.chart-stat-lbl{font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);margin-top:2px;}
-.controls{margin-bottom:16px;display:flex;flex-direction:column;gap:10px;}
-.period-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.period-btn{padding:9px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--mu);font-family:'Space Mono',monospace;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s ease;letter-spacing:1px;}
-.period-btn:hover{border-color:var(--a1);color:var(--a1);}
-.period-btn.active{background:rgba(0,212,255,.1);border-color:var(--a1);color:var(--a1);}
-.date-row{display:flex;align-items:center;gap:8px;}
-.date-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--mu);white-space:nowrap;}
-.date-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--tx);font-family:'Space Mono',monospace;font-size:11px;padding:8px 12px;cursor:pointer;transition:all .2s ease;color-scheme:dark;}
-.date-input:focus{outline:none;border-color:var(--a1);}
-.date-btn{padding:8px 14px;background:rgba(0,212,255,.1);border:1px solid var(--a1);border-radius:8px;color:var(--a1);font-family:'Space Mono',monospace;font-size:11px;cursor:pointer;transition:all .2s ease;white-space:nowrap;}
-.date-btn:hover{background:rgba(0,212,255,.2);}
-.date-btn.active{background:var(--a1);color:var(--bg);}
-.refresh-btn{width:100%;margin-top:24px;padding:14px;background:transparent;border:1px solid var(--border);border-radius:12px;color:var(--a1);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;text-transform:uppercase;transition:all .3s ease;}
-.refresh-btn:hover{background:rgba(0,212,255,.05);border-color:var(--a1);}
-.refresh-btn:active{transform:scale(.98);}
-@keyframes fadeDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+  :root {
+    --bg: #0a0e1a;
+    --card: #111827;
+    --border: #1e2d45;
+    --accent1: #00d4ff;
+    --accent2: #ff6b35;
+    --accent3: #39ff14;
+    --text: #e2e8f0;
+    --muted: #4a6080;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .title {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 3px;
+    color: var(--accent1);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  h1 { font-size: 28px; font-weight: 800; line-height: 1; color: var(--text); }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent3);
+    margin-top: 8px;
+  }
+
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent3);
+    animation: pulse 2s infinite;
+  }
+
+  .update-time {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .card.vidus::before { background: linear-gradient(90deg, var(--accent1), transparent); }
+  .card.lauke::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+  .card.prediction-card::before { background: linear-gradient(90deg, var(--accent3), transparent); }
+
+  /* Prognozės blokas */
+  .prediction-card {
+    margin-bottom: 24px;
+    border-color: rgba(57, 255, 20, 0.3);
+    background: linear-gradient(135deg, #111827 0%, #0d1b2a 100%);
+  }
+  .prediction-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent3);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .prediction-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .temp-display { display: flex; flex-direction: column; gap: 4px; }
+  .temp-icon { font-size: 28px; margin-bottom: 4px; }
+
+  .temp-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--accent1);
+    transition: all 0.5s ease;
+  }
+
+  .card.lauke .temp-value { color: var(--accent2); }
+
+  .temp-unit {
+    font-size: 20px;
+    color: var(--muted);
+    vertical-align: super;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .temp-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  .humi-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .humi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .humi-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .humi-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent1);
+    transition: all 0.5s ease;
+  }
+
+  .card.lauke .humi-value { color: var(--accent2); }
+  .pres-value { color: #a855f7 !important; } /* Violetinė spalva slėgiui */
+
+  .humi-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+
+  .humi-fill {
+    height: 100%;
+    background: var(--accent1);
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  .card.lauke .humi-fill { background: var(--accent2); }
+
+  /* Grafiko kortelė */
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .chart-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .chart-card.temp-chart::before { background: linear-gradient(90deg, var(--accent1), var(--accent2), transparent); }
+  .chart-card.humi-chart::before { background: linear-gradient(90deg, #4fc3f7, transparent); }
+
+  .chart-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .chart-title .period-label { color: var(--accent3); font-size: 9px; }
+
+  .chart-container { position: relative; height: 150px; }
+
+  .chart-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .chart-stat { text-align: center; }
+
+  .chart-stat-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .chart-stat-lbl {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* Valdymas */
+  .controls { margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .period-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+  .period-btn {
+    padding: 9px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 1px;
+  }
+
+  .period-btn:hover { border-color: var(--accent1); color: var(--accent1); }
+  .period-btn.active { background: rgba(0,212,255,0.1); border-color: var(--accent1); color: var(--accent1); }
+
+  .date-row { display: flex; align-items: center; gap: 8px; }
+  .date-label { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+  .date-input {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color-scheme: dark;
+  }
+
+  .date-input:focus { outline: none; border-color: var(--accent1); }
+
+  .date-btn {
+    padding: 8px 14px;
+    background: rgba(0,212,255,0.1);
+    border: 1px solid var(--accent1);
+    border-radius: 8px;
+    color: var(--accent1);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .date-btn:hover { background: rgba(0,212,255,0.2); }
+  .date-btn.active { background: var(--accent1); color: var(--bg); }
+
+  .refresh-btn {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--accent1);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+  }
+
+  .refresh-btn:hover { background: rgba(0,212,255,0.05); border-color: var(--accent1); }
+  .refresh-btn:active { transform: scale(0.98); }
+
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
 </style>
 </head>
 <body>
 <div class="container">
- 
-<header>
-  <div>
-    <h1>Meteo<br>Stotelė</h1>
-    <div class="status"><div class="dot"></div><span id="statusText">Jungiamasi...</span></div>
-  </div>
-  <div class="update-time">
-    <div style="font-size:18px;margin-bottom:4px;">🌡️</div>
-    <div id="lastUpdate">--:--</div>
-    <div style="margin-top:2px;color:#1e2d45">atnaujinta</div>
-  </div>
-</header>
- 
-<!-- VIDUS -->
-<div class="section-label">🏠 Vidus</div>
-<div class="card vidus" style="animation:fadeUp .6s ease .1s both;margin-bottom:12px;">
-  <div class="temp-display">
-    <div class="temp-icon">🌡️</div>
-    <div><span class="temp-value" id="vidTemp">--</span><span class="temp-unit">°C</span></div>
-    <div class="temp-label">TEMPERATŪRA</div>
-  </div>
-  <div class="humi-section">
-    <div class="humi-header">
-      <span class="humi-label">💧 DRĖGMĖ</span>
-      <span class="humi-value" id="vidHumi">--%</span>
-    </div>
-    <div class="humi-bar"><div class="humi-fill" id="vidHumiBar" style="width:0%"></div></div>
-  </div>
-  <div class="comfort-bar" id="vidComfort" style="background:#888">KRAUNAMA</div>
-</div>
- 
-<!-- LAUKAS -->
-<div class="section-label">🌿 Laukas</div>
-<div class="card lauke" style="animation:fadeUp .6s ease .2s both;margin-bottom:12px;">
-  <div class="temp-display">
-    <div class="temp-icon">🌤️</div>
-    <div><span class="temp-value" id="laukTemp">--</span><span class="temp-unit">°C</span></div>
-    <div class="temp-label">TEMPERATŪRA</div>
-  </div>
-  <div class="humi-section">
-    <div class="humi-header">
-      <span class="humi-label">💧 DRĖGMĖ</span>
-      <span class="humi-value" id="laukHumi">--%</span>
-    </div>
-    <div class="humi-bar"><div class="humi-fill" id="laukHumiBar" style="width:0%"></div></div>
-  </div>
-  <div class="comfort-bar" id="laukComfort" style="background:#888">KRAUNAMA</div>
-</div>
- 
-<!-- OWM ORAI -->
-<div class="section-label">⛅ Orai – Žeimelis</div>
-<div class="owm-card" style="animation:fadeUp .6s ease .4s both;">
-  <div class="owm-top">
+
+  <header>
     <div>
-      <div class="owm-temp" id="owmTemp">--°</div>
-      <div class="owm-desc" id="owmDesc">kraunama...</div>
-      <div class="owm-feels" id="owmFeels">Junta kaip: --°C</div>
-    </div>
-    <div class="owm-icon" id="owmIcon">⛅</div>
-  </div>
-  <div class="owm-grid">
-    <div>
-      <div class="owm-item-lbl">💧 DRĖGMĖ</div>
-      <div class="owm-item-val" id="owmHumi">--%</div>
-    </div>
-    <div>
-      <div class="owm-item-lbl">💨 VĖJAS</div>
-      <div class="owm-item-val" id="owmWind">-- m/s</div>
-    </div>
-    <div>
-      <div class="owm-item-lbl">📊 SLĖGIS</div>
-      <div class="owm-item-val" id="owmPressure">-- hPa</div>
-    </div>
-    <div>
-      <div class="owm-item-lbl">☁️ DEBESUOTA</div>
-      <div class="owm-item-val" id="owmClouds">--%</div>
-    </div>
-  </div>
-  <div class="owm-forecast">
-    <div class="owm-fc-block">
-      <div class="owm-fc-lbl">RYTOJ DIENA</div>
-      <div class="owm-fc-temp" id="fcMax" style="color:#f39c12">--°</div>
-    </div>
-    <div class="owm-fc-block">
-      <div class="owm-fc-lbl">RYTOJ NAKTIS</div>
-      <div class="owm-fc-temp" id="fcMin" style="color:var(--a1)">--°</div>
-    </div>
-  </div>
-</div>
- 
-<!-- VIETINĖ PROGNOZĖ -->
-<div class="section-label" style="margin-top:20px;">🔮 Vietinė prognozė</div>
-<div class="card" style="animation:fadeUp .6s ease .45s both;margin-bottom:24px;position:relative;overflow:hidden;">
-  <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#9b59b6,#00d4ff,transparent);"></div>
- 
-  <!-- Prognozės rezultatas -->
-  <div id="localForecastResult" style="text-align:center;padding:12px 0 16px;">
-    <div style="font-size:32px;margin-bottom:6px;" id="localForecastEmoji">⏳</div>
-    <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--tx);" id="localForecastText">KRAUNAMA...</div>
-    <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--mu);margin-top:4px;" id="localForecastSub"></div>
-  </div>
- 
-  <!-- Tendencijų lentelė -->
-  <div style="border-top:1px solid var(--border);padding-top:14px;">
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
- 
-      <!-- Slėgis -->
-      <div style="text-align:center;background:rgba(155,89,182,.08);border-radius:8px;padding:10px 6px;">
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:1px;margin-bottom:6px;">SLĖGIS</div>
-        <div style="font-size:18px;" id="pfPressIcon">—</div>
-        <div style="font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#9b59b6;margin-top:4px;" id="pfPressVal">--</div>
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);margin-top:2px;" id="pfPressDiff">--</div>
+      <div class="title">ESP32 · AHT20 · BMP280 · ThingSpeak</div>
+      <h1>Meteo<br>Stotelė</h1>
+      <div class="status">
+        <div class="dot"></div>
+        <span id="statusText">Jungiamasi...</span>
       </div>
- 
-      <!-- Temperatūra -->
-      <div style="text-align:center;background:rgba(0,212,255,.06);border-radius:8px;padding:10px 6px;">
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:1px;margin-bottom:6px;">TEMP</div>
-        <div style="font-size:18px;" id="pfTempIcon">—</div>
-        <div style="font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--a1);margin-top:4px;" id="pfTempVal">--</div>
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);margin-top:2px;" id="pfTempDiff">--</div>
+    </div>
+    <div class="update-time">
+      <div style="font-size:18px; margin-bottom:4px;">🌤️</div>
+      <div id="lastUpdate">--:--</div>
+      <div style="margin-top:2px; color:#1e2d45">atnaujinta</div>
+    </div>
+  </header>
+
+  <div class="card prediction-card" style="animation: fadeUp 0.6s ease both;">
+    <div class="prediction-title">🔮 VIETINĖ PROGNOZĖ (12-24H)</div>
+    <div class="prediction-text" id="weatherPrediction">Skaičiuojama...</div>
+  </div>
+
+  <div class="section-label">🏠 Vidus</div>
+  <div class="card vidus" style="animation: fadeUp 0.6s ease 0.1s both; margin-bottom: 12px;">
+    <div class="temp-display">
+      <div class="temp-icon">🏠</div>
+      <div>
+        <span class="temp-value" id="vidTemp">--</span>
+        <span class="temp-unit">°C</span>
       </div>
- 
-      <!-- Drėgmė -->
-      <div style="text-align:center;background:rgba(255,107,53,.06);border-radius:8px;padding:10px 6px;">
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:1px;margin-bottom:6px;">DRĖGMĖ</div>
-        <div style="font-size:18px;" id="pfHumiIcon">—</div>
-        <div style="font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--a2);margin-top:4px;" id="pfHumiVal">--</div>
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);margin-top:2px;" id="pfHumiDiff">--</div>
+      <div class="temp-label">TEMPERATŪRA</div>
+    </div>
+    <div class="humi-section">
+      <div class="humi-header">
+        <span class="humi-label">💧 DRĖGMĖ</span>
+        <span class="humi-value" id="vidHumi">--%</span>
       </div>
- 
+      <div class="humi-bar">
+        <div class="humi-fill" id="vidHumiBar" style="width:0%"></div>
+      </div>
     </div>
-    <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);text-align:center;margin-top:10px;" id="pfTimeInfo">Laukiama duomenų...</div>
   </div>
+
+  <div class="section-label">🌿 Laukas</div>
+  <div class="card lauke" style="animation: fadeUp 0.6s ease 0.2s both; margin-bottom: 32px;">
+    <div class="temp-display">
+      <div class="temp-icon">🍃</div>
+      <div>
+        <span class="temp-value" id="laukTemp">--</span>
+        <span class="temp-unit">°C</span>
+      </div>
+      <div class="temp-label">TEMPERATŪRA</div>
+    </div>
+    
+    <div class="humi-section" style="border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 16px;">
+      <div class="humi-header">
+        <span class="humi-label">⏲️ ATMOSFEROS SLĖGIS</span>
+        <span class="humi-value pres-value" id="laukPres">---- hPa</span>
+      </div>
+    </div>
+
+    <div class="humi-section" style="border-top:none; margin-top:0; padding-top:0;">
+      <div class="humi-header">
+        <span class="humi-label">💧 DRĖGMĖ</span>
+        <span class="humi-value" id="laukHumi">--%</span>
+      </div>
+      <div class="humi-bar">
+        <div class="humi-fill" id="laukHumiBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="animation: fadeUp 0.6s ease 0.3s both;">
+    <div class="section-label">📈 Istorija</div>
+
+    <div class="controls">
+      <div class="period-btns">
+        <button class="period-btn active" onclick="setPeriod('1H', this)">1H</button>
+        <button class="period-btn" onclick="setPeriod('12H', this)">12H</button>
+        <button class="period-btn" onclick="setPeriod('24H', this)">24H</button>
+      </div>
+      <div class="date-row">
+        <span class="date-label">📅 DATA:</span>
+        <input type="date" class="date-input" id="datePicker">
+        <button class="date-btn" id="dateBtn" onclick="setDate()">Rodyti</button>
+      </div>
+    </div>
+
+    <div class="chart-card temp-chart">
+      <div class="chart-title">
+        🌡️ Temperatūra
+        <span class="period-label" id="tempPeriodLabel">PASKUTINĖ 1H</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="tempChart"></canvas>
+      </div>
+      <div class="chart-stats">
+        <div class="chart-stat">
+          <div class="chart-stat-val" id="tempMin" style="color:#4fc3f7">--°</div>
+          <div class="chart-stat-lbl">MIN</div>
+        </div>
+        <div class="chart-stat">
+          <div class="chart-stat-val" id="tempAvg" style="color:var(--text)">--°</div>
+          <div class="chart-stat-lbl">VIDURKIS</div>
+        </div>
+        <div class="chart-stat">
+          <div class="chart-stat-val" id="tempMax" style="color:var(--accent2)">--°</div>
+          <div class="chart-stat-lbl">MAX</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card humi-chart">
+      <div class="chart-title">
+        💧 Drėgmė
+        <span class="period-label" id="humiPeriodLabel">PASKUTINĖ 1H</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="humiChart"></canvas>
+      </div>
+      <div class="chart-stats">
+        <div class="chart-stat">
+          <div class="chart-stat-val" id="humiMin" style="color:#4fc3f7">--%</div>
+          <div class="chart-stat-lbl">MIN</div>
+        </div>
+        <div class="chart-stat">
+          <div class="chart-stat-val" id="humiAvg" style="color:var(--text)">--%</div>
+          <div class="chart-stat-lbl">VIDURKIS</div>
+        </div>
+        <div class="chart-stat">
+          <div class="chart-stat-val" id="humiMax" style="color:var(--accent2)">--%</div>
+          <div class="chart-stat-lbl">MAX</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="refresh-btn" onclick="fetchData()" id="refreshBtn">
+    ↻ &nbsp; Atnaujinti duomenis
+  </button>
+
 </div>
- 
-<!-- GRAFIKAI -->
-<!-- GRAFIKAI – paslėpti pagal nutylėjimą -->
-<button onclick="toggleCharts()" id="chartsToggleBtn" style="width:100%;margin-bottom:16px;padding:14px;background:transparent;border:1px solid var(--border);border-radius:12px;color:var(--mu);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;text-transform:uppercase;transition:all .3s ease;display:flex;align-items:center;justify-content:center;gap:8px;">
-  <span id="chartsToggleIcon">📈</span>
-  <span id="chartsToggleText">RODYTI GRAFIKUS</span>
-</button>
- 
-<div id="chartsSection" style="display:none;">
-  <div class="controls">
-    <div class="period-btns">
-      <button class="period-btn active" onclick="setPeriod('1H',this)">1H</button>
-      <button class="period-btn" onclick="setPeriod('12H',this)">12H</button>
-      <button class="period-btn" onclick="setPeriod('24H',this)">24H</button>
-    </div>
-    <div class="date-row">
-      <span class="date-label">📅 DATA:</span>
-      <input type="date" class="date-input" id="datePicker">
-      <button class="date-btn" id="dateBtn" onclick="setDate()">Rodyti</button>
-    </div>
-  </div>
- 
-  <div class="chart-card temp-chart">
-    <div class="chart-title">🌡️ Temperatūra<span class="period-label" id="tempPeriodLabel">PASKUTINĖ 1H</span></div>
-    <div class="chart-container"><canvas id="tempChart"></canvas></div>
-    <div class="chart-stats">
-      <div class="chart-stat"><div class="chart-stat-val" id="tempMin" style="color:#4fc3f7">--°</div><div class="chart-stat-lbl">MIN</div></div>
-      <div class="chart-stat"><div class="chart-stat-val" id="tempAvg">--°</div><div class="chart-stat-lbl">VIDURKIS</div></div>
-      <div class="chart-stat"><div class="chart-stat-val" id="tempMax" style="color:var(--a2)">--°</div><div class="chart-stat-lbl">MAX</div></div>
-    </div>
-  </div>
- 
-  <div class="chart-card humi-chart">
-    <div class="chart-title">💧 Drėgmė<span class="period-label" id="humiPeriodLabel">PASKUTINĖ 1H</span></div>
-    <div class="chart-container"><canvas id="humiChart"></canvas></div>
-    <div class="chart-stats">
-      <div class="chart-stat"><div class="chart-stat-val" id="humiMin" style="color:#4fc3f7">--%</div><div class="chart-stat-lbl">MIN</div></div>
-      <div class="chart-stat"><div class="chart-stat-val" id="humiAvg">--%</div><div class="chart-stat-lbl">VIDURKIS</div></div>
-      <div class="chart-stat"><div class="chart-stat-val" id="humiMax" style="color:var(--a2)">--%</div><div class="chart-stat-lbl">MAX</div></div>
-    </div>
-  </div>
- 
-  <div class="chart-card press-chart">
-    <div class="chart-title">🔵 Slėgis<span class="period-label" id="pressPeriodLabel">PASKUTINĖ 1H</span></div>
-    <div class="chart-container"><canvas id="pressChart"></canvas></div>
-    <div class="chart-stats">
-      <div class="chart-stat"><div class="chart-stat-val" id="pressMin" style="color:#9b59b6">-- hPa</div><div class="chart-stat-lbl">MIN</div></div>
-      <div class="chart-stat"><div class="chart-stat-val" id="pressAvg">-- hPa</div><div class="chart-stat-lbl">VIDURKIS</div></div>
-      <div class="chart-stat"><div class="chart-stat-val" id="pressMax" style="color:var(--a2)">-- hPa</div><div class="chart-stat-lbl">MAX</div></div>
-    </div>
-  </div>
-</div>
- 
-<button class="refresh-btn" onclick="fetchAll()" id="refreshBtn">↻ &nbsp; Atnaujinti duomenis</button>
- 
-</div>
+
 <script>
-const CHANNEL_ID  = '3294006';
+const CHANNEL_ID = '3294006';
 const READ_API_KEY = 'Y67A8GD4V5FINMWW';
-const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108';
-const OWM_CITY    = 'Pakruojis,LT';
- 
-let mode = 'period', currentPeriod = '1H';
+
+let mode = 'period';
+let currentPeriod = '1H';
+
+// Konfigūracija istoriniams duomenims imti
 const periodMap = {
   '1H':  { results: 60,   label: 'PASKUTINĖ 1H'  },
   '12H': { results: 720,  label: 'PASKUTINĖS 12H' },
   '24H': { results: 1440, label: 'PASKUTINĖS 24H' }
 };
- 
+
 const picker = document.getElementById('datePicker');
 const today = new Date().toISOString().split('T')[0];
-picker.value = today; picker.max = today;
- 
+picker.value = today;
+picker.max = today;
+
 Chart.defaults.color = '#4a6080';
 Chart.defaults.font.family = "'Space Mono', monospace";
 Chart.defaults.font.size = 9;
- 
-const chartOpts = (yLabel) => ({
-  responsive: true, maintainAspectRatio: false, animation: { duration: 600 },
-  plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 8, boxHeight: 8, padding: 12, font: { size: 9 } } },
-    tooltip: { backgroundColor: '#111827', borderColor: '#1e2d45', borderWidth: 1 } },
+
+const chartOptions = (yLabel) => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: { duration: 600 },
+  plugins: {
+    legend: { display: true, position: 'top', labels: { boxWidth: 8, boxHeight: 8, padding: 12, font: { size: 9 } } },
+    tooltip: { backgroundColor: '#111827', borderColor: '#1e2d45', borderWidth: 1 }
+  },
   scales: {
-    x: { grid: { color: 'rgba(30,45,69,.5)' }, ticks: { maxTicksLimit: 6, maxRotation: 0 } },
-    y: { grid: { color: 'rgba(30,45,69,.5)' }, ticks: { callback: v => v + yLabel } }
+    x: { grid: { color: 'rgba(30,45,69,0.5)' }, ticks: { maxTicksLimit: 6, maxRotation: 0 } },
+    y: { grid: { color: 'rgba(30,45,69,0.5)' }, ticks: { callback: v => v + yLabel } }
   }
 });
- 
-const mkDs = (label, color) => ({
-  label, data: [], borderColor: color, backgroundColor: color + '15',
-  borderWidth: 2, pointRadius: 2, tension: 0.4, fill: true, spanGaps: true
+
+const makeDataset = (label, color) => ({
+  label, data: [],
+  borderColor: color,
+  backgroundColor: color + '15',
+  borderWidth: 2, pointRadius: 2, tension: 0.4, fill: true, spanGaps: true,
 });
- 
+
 const tempChart = new Chart(document.getElementById('tempChart').getContext('2d'), {
   type: 'line',
-  data: { labels: [], datasets: [ mkDs('Vidus °C','#00d4ff'), mkDs('Laukas °C','#ff6b35') ] },
-  options: chartOpts('°')
+  data: { labels: [], datasets: [ makeDataset('Vidus °C', '#00d4ff'), makeDataset('Laukas °C', '#ff6b35') ] },
+  options: chartOptions('°')
 });
- 
+
 const humiChart = new Chart(document.getElementById('humiChart').getContext('2d'), {
   type: 'line',
-  data: { labels: [], datasets: [ mkDs('Vidus %','#00d4ff'), mkDs('Laukas %','#ff6b35') ] },
-  options: chartOpts('%')
+  data: { labels: [], datasets: [ makeDataset('Vidus %', '#00d4ff'), makeDataset('Laukas %', '#ff6b35') ] },
+  options: chartOptions('%')
 });
- 
-const pressChart = new Chart(document.getElementById('pressChart').getContext('2d'), {
-  type: 'line',
-  data: { labels: [], datasets: [ mkDs('Slėgis hPa','#9b59b6') ] },
-  options: chartOpts(' hPa')
-});
- 
-// Komforto funkcija
-function comfort(t, h) {
-  if (isNaN(t)||isNaN(h)) return { txt:'?', bg:'#444' };
-  if (t < 16)  return { txt:'ŠALTA',   bg:'#00d4ff' };
-  if (t > 28)  return { txt:'KARŠTA',  bg:'#e74c3c' };
-  if (h > 70)  return { txt:'DRĖGNA',  bg:'#f39c12' };
-  if (h < 30)  return { txt:'SAUSA',   bg:'#f1c40f' };
-  return { txt:'GERAI', bg:'#07e000' };
-}
- 
-// OWM ikonos
-function owmEmoji(icon) {
-  if (!icon) return '⛅';
-  if (icon.startsWith('01')) return '☀️';
-  if (icon.startsWith('02')) return '🌤️';
-  if (icon.startsWith('03')) return '⛅';
-  if (icon.startsWith('04')) return '☁️';
-  if (icon.startsWith('09')||icon.startsWith('10')) return '🌧️';
-  if (icon.startsWith('11')) return '⛈️';
-  if (icon.startsWith('13')) return '❄️';
-  if (icon.startsWith('50')) return '🌫️';
-  return '⛅';
-}
- 
-// Periodo pasirinkimas
-let chartsVisible = false;
-let chartsLoaded = false;
- 
-function toggleCharts() {
-  chartsVisible = !chartsVisible;
-  const section = document.getElementById('chartsSection');
-  const btn = document.getElementById('chartsToggleBtn');
-  const icon = document.getElementById('chartsToggleIcon');
-  const text = document.getElementById('chartsToggleText');
- 
-  if (chartsVisible) {
-    section.style.display = 'block';
-    btn.style.color = 'var(--a1)';
-    btn.style.borderColor = 'var(--a1)';
-    icon.textContent = '📉';
-    text.textContent = 'SLĖPTI GRAFIKUS';
-    // Krauti grafikus tik pirmą kartą
-    if (!chartsLoaded) {
-      fetchCharts();
-      chartsLoaded = true;
-    }
-    // Chart.js reikia resize po display:block
-    setTimeout(() => {
-      tempChart.resize();
-      humiChart.resize();
-      pressChart.resize();
-    }, 50);
-  } else {
-    section.style.display = 'none';
-    btn.style.color = 'var(--mu)';
-    btn.style.borderColor = 'var(--border)';
-    icon.textContent = '📈';
-    text.textContent = 'RODYTI GRAFIKUS';
-  }
-}
- 
-function setPeriod(p, btn) {
-  mode = 'period'; currentPeriod = p;
+
+function setPeriod(period, btn) {
+  mode = 'period';
+  currentPeriod = period;
   document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('dateBtn').classList.remove('active');
-  const lbl = periodMap[p].label;
-  ['tempPeriodLabel','humiPeriodLabel','pressPeriodLabel'].forEach(id => document.getElementById(id).textContent = lbl);
+  const label = periodMap[period].label;
+  document.getElementById('tempPeriodLabel').textContent = label;
+  document.getElementById('humiPeriodLabel').textContent = label;
   fetchCharts();
 }
- 
+
 function setDate() {
   const val = picker.value;
   if (!val) return;
   mode = 'date';
   document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('dateBtn').classList.add('active');
-  ['tempPeriodLabel','humiPeriodLabel','pressPeriodLabel'].forEach(id => document.getElementById(id).textContent = val);
+  document.getElementById('tempPeriodLabel').textContent = val;
+  document.getElementById('humiPeriodLabel').textContent = val;
   fetchCharts();
 }
- 
+
+// Supaprastintas Zambretti prognozavimo algoritmas pagal slėgio tendencijas ir drėgmę
+function calculateZambretti(pressures, humidities) {
+  const validP = pressures.filter(v => v !== null && !isNaN(v));
+  const validH = humidities.filter(v => v !== null && !isNaN(v));
+
+  if (validP.length < 5) return "Laukiama daugiau barometro duomenų...";
+
+  const currentP = validP[validP.length - 1];
+  // Paimame slėgį, buvusį prieš maždaug 1-2 valandas (arba seniausią turimą sąraše)
+  const oldP = validP[Math.max(0, validP.length - 20)]; 
+  const currentH = validH.length ? validH[validH.length - 1] : 50;
+
+  const pTrend = currentP - oldP; // Slėgio kitimo tendencija
+
+  // 1. Slėgis stipriai krenta
+  if (pTrend <= -1.5) {
+    if (currentH > 80) return "🌧️ Audra, stiprus lietus ir vėjas";
+    return "🌦️ Orų prastėjimas, laukite lietaus";
+  } 
+  // 2. Slėgis po truputį krenta ar stabiliai žemas
+  else if (pTrend < -0.2 && pTrend > -1.5) {
+    if (currentP < 1009) return "🌧️ Permainingi orai, galimi krituliai";
+    return "⛅ Debesuota, galimas trumpas lietus";
+  } 
+  // 3. Slėgis stipriai kyla
+  else if (pTrend >= 1.5) {
+    return "☀️ Orai staigiai taisosi, bus giedra ir sausa";
+  } 
+  // 4. Slėgis po truputį kyla ar stabiliai aukštas
+  else if (pTrend > 0.2 && pTrend < 1.5) {
+    if (currentP > 1020) return "☀️ Gražūs, giedri ir stabilūs orai";
+    return "🌤️ Orai gerėja, mažai debesuota";
+  } 
+  // 5. Slėgis visiškai stabilus
+  else {
+    if (currentH > 85) return "🌫️ Stabilu, didelė rūko / rasos tikimybė";
+    if (currentP > 1015) return "🌤️ Geri, pastovūs orai";
+    return "⛅ Vidutiniški orai, be žymių pakitimų";
+  }
+}
+
 async function fetchCharts() {
   let url;
   if (mode === 'date') {
-    const d = picker.value;
-    url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&start=${d}T00:00:00Z&end=${d}T23:59:59Z&results=8000`;
+    const date = picker.value;
+    url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&start=${date}T00:00:00Z&end=${date}T23:59:59Z&results=8000`;
   } else {
-    url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=${periodMap[currentPeriod].results}`;
+    // Imame iki 120 rezultatų, kad turėtume pakankamai istorijos barometro tendencijai nustatyti
+    const resultsCount = Math.max(120, periodMap[currentPeriod].results);
+    url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=${resultsCount}`;
   }
+
   try {
-    const data = await (await fetch(url)).json();
+    const res = await fetch(url);
+    const data = await res.json();
     const feeds = data.feeds || [];
-    const labels=[], vT=[], vH=[], lT=[], lH=[], pr=[];
+
+    const labels = [], vTemps = [], vHumis = [], lTemps = [], lHumis = [], lPressures = [];
     feeds.forEach(f => {
       const t = new Date(f.created_at);
-      labels.push(t.toLocaleTimeString('lt-LT',{hour:'2-digit',minute:'2-digit'}));
-      vT.push(f.field1?parseFloat(f.field1):null);
-      vH.push(f.field2?parseFloat(f.field2):null);
-      lT.push(f.field3?parseFloat(f.field3):null);
-      lH.push(f.field4?parseFloat(f.field4):null);
-      pr.push(f.field5?parseFloat(f.field5):null);
+      labels.push(t.toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'}));
+      vTemps.push(f.field1 ? parseFloat(f.field1) : null);
+      vHumis.push(f.field2 ? parseFloat(f.field2) : null);
+      lTemps.push(f.field3 ? parseFloat(f.field3) : null);
+      lHumis.push(f.field4 ? parseFloat(f.field4) : null);
+      lPressures.push(f.field5 ? parseFloat(f.field5) : null); // Field5 skirtas slėgiui
     });
-    tempChart.data.labels = labels;
-    tempChart.data.datasets[0].data = vT;
-    tempChart.data.datasets[1].data = lT;
+
+    // Apribojame grafiko taškus pagal vartotojo pasirinktą periodą
+    const sliceCount = periodMap[currentPeriod].results;
+    tempChart.data.labels = labels.slice(-sliceCount);
+    tempChart.data.datasets[0].data = vTemps.slice(-sliceCount);
+    tempChart.data.datasets[1].data = lTemps.slice(-sliceCount);
     tempChart.update();
-    humiChart.data.labels = labels;
-    humiChart.data.datasets[0].data = vH;
-    humiChart.data.datasets[1].data = lH;
+
+    humiChart.data.labels = labels.slice(-sliceCount);
+    humiChart.data.datasets[0].data = vHumis.slice(-sliceCount);
+    humiChart.data.datasets[1].data = lHumis.slice(-sliceCount);
     humiChart.update();
-    pressChart.data.labels = labels;
-    pressChart.data.datasets[0].data = pr;
-    pressChart.update();
- 
-    const stat = (arr, id1, id2, id3, sfx) => {
-      const v = arr.filter(x=>x!==null);
-      if (!v.length) return;
-      document.getElementById(id1).textContent = Math.min(...v).toFixed(1)+sfx;
-      document.getElementById(id2).textContent = (v.reduce((a,b)=>a+b,0)/v.length).toFixed(1)+sfx;
-      document.getElementById(id3).textContent = Math.max(...v).toFixed(1)+sfx;
-    };
-    stat(vT,'tempMin','tempAvg','tempMax','°');
-    stat(vH,'humiMin','humiAvg','humiMax','%');
-    stat(pr,'pressMin','pressAvg','pressMax',' hPa');
-  } catch(e) { console.error(e); }
+
+    // Vykdome orų prognozę remiantis sukauptais duomenimis
+    const prognoze = calculateZambretti(lPressures, lHumis);
+    document.getElementById('weatherPrediction').textContent = prognoze;
+
+    const validVT = vTemps.slice(-sliceCount).filter(v => v !== null);
+    if (validVT.length) {
+      document.getElementById('tempMin').textContent = Math.min(...validVT).toFixed(1) + '°';
+      document.getElementById('tempMax').textContent = Math.max(...validVT).toFixed(1) + '°';
+      document.getElementById('tempAvg').textContent = (validVT.reduce((a,b)=>a+b,0)/validVT.length).toFixed(1) + '°';
+    }
+
+    const validVH = vHumis.slice(-sliceCount).filter(v => v !== null);
+    if (validVH.length) {
+      document.getElementById('humiMin').textContent = Math.min(...validVH).toFixed(0) + '%';
+      document.getElementById('humiMax').textContent = Math.max(...validVH).toFixed(0) + '%';
+      document.getElementById('humiAvg').textContent = (validVH.reduce((a,b)=>a+b,0)/validVH.length).toFixed(0) + '%';
+    }
+  } catch(e) { console.error('Chart klaida:', e); }
 }
- 
+
 async function fetchData() {
-  try {
-    // Imame 100 įrašų – pakanka ~3 valandoms kai siunčiama kas 5 min
-    const resp = await fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=100`);
-    if (!resp.ok) throw new Error('ThingSpeak klaida: ' + resp.status);
-    const data = await resp.json();
-    if (!data.feeds) throw new Error('Nėra duomenų');
-    const feeds = data.feeds || [];
-    const get = field => {
-      for (let i=feeds.length-1;i>=0;i--)
-        if (feeds[i][field]!=null) return parseFloat(feeds[i][field]);
-      return NaN;
-    };
-    const vT=get('field1'), vH=get('field2'), lT=get('field3'), lH=get('field4'), pr=get('field5');
- 
-    document.getElementById('vidTemp').textContent = isNaN(vT)?'--':vT.toFixed(1);
-    document.getElementById('vidHumi').textContent = isNaN(vH)?'--%':vH.toFixed(1)+'%';
-    document.getElementById('vidHumiBar').style.width = isNaN(vH)?'0%':vH+'%';
-    document.getElementById('laukTemp').textContent = isNaN(lT)?'--':lT.toFixed(1);
-    document.getElementById('laukHumi').textContent = isNaN(lH)?'--%':lH.toFixed(1)+'%';
-    document.getElementById('laukHumiBar').style.width = isNaN(lH)?'0%':lH+'%';
- 
-    // Komfortas
-    const cv = comfort(vT, vH);
-    const cl = comfort(lT, lH);
-    const vc = document.getElementById('vidComfort');
-    const lc = document.getElementById('laukComfort');
-    vc.textContent = cv.txt; vc.style.background = cv.bg;
-    lc.textContent = cl.txt; lc.style.background = cl.bg;
- 
-    // Slėgis – rodomas prognozės kortelėje
-    if (!isNaN(pr)) {
-      // pressureVal naudojamas calcLocalForecast viduje
-      window._currentPressure = pr;
-    }
- 
-    // ── Slėgio tendencija iš ThingSpeak istorijos ──
-    // Imame field5 reikšmes su timestamp
-    const pressReadings = feeds
-      .filter(f => f.field5 != null)
-      .map(f => ({ t: new Date(f.created_at).getTime(), v: parseFloat(f.field5) }));
- 
-    if (pressReadings.length >= 2) {
-      const newest = pressReadings[pressReadings.length - 1];
-      const now3h = newest.t - 3 * 60 * 60 * 1000; // 3 valandos atgal
- 
-      // Ieškome įrašo arčiausiai 3h atgal
-      let oldest = pressReadings[0];
-      for (const r of pressReadings) {
-        if (Math.abs(r.t - now3h) < Math.abs(oldest.t - now3h)) oldest = r;
-      }
- 
-      const diff = newest.v - oldest.v;
-      const hoursBack = ((newest.t - oldest.t) / 3600000).toFixed(1);
-      // Tendencija rodoma prognozės kortelėje per calcLocalForecast
-      // (atskira kortelė pašalinta)
-    } else {
-      // Slėgio istorijos dar nėra
-    }
- 
-    const now = new Date();
-    document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('lt-LT',{hour:'2-digit',minute:'2-digit'});
-    document.getElementById('statusText').textContent = 'Gyvas · '+now.toLocaleDateString('lt-LT');
- 
-    // ── Vietinė prognozė iš visų trijų daviklių ──
-    calcLocalForecast(feeds);
- 
-  } catch(e) {
-    console.error('fetchData klaida:', e);
-    document.getElementById('statusText').textContent = 'Klaida: ' + e.message;
-  }
-}
- 
-function calcLocalForecast(feeds) {
-  // Surinkti istoriją su timestamp kiekvienam davikliui
-  const getHistory = (field) => feeds
-    .filter(f => f[field] != null)
-    .map(f => ({ t: new Date(f.created_at).getTime(), v: parseFloat(f[field]) }));
- 
-  const pressH = getHistory('field5');
-  const tempH  = getHistory('field3'); // lauko temp
-  const humiH  = getHistory('field4'); // lauko drėgmė
- 
-  if (pressH.length < 2) {
-    document.getElementById('pfTimeInfo').textContent = 'Kaupiami duomenys – reikia 3h istorijos...';
-    return;
-  }
- 
-  // Palyginti su prieš ~3h
-  const getChange = (history) => {
-    if (history.length < 2) return null;
-    const newest = history[history.length - 1];
-    const target = newest.t - 3 * 60 * 60 * 1000;
-    let oldest = history[0];
-    for (const r of history)
-      if (Math.abs(r.t - target) < Math.abs(oldest.t - target)) oldest = r;
-    return { diff: newest.v - oldest.v, newest: newest.v, oldest: oldest.v,
-             hours: ((newest.t - oldest.t) / 3600000).toFixed(1) };
-  };
- 
-  const pr = getChange(pressH);
-  const tp = getChange(tempH);
-  const hm = getChange(humiH);
- 
-  // Rodyti kiekvieno daviklio tendenciją
-  const trendIcon = (diff, reverse=false) => {
-    const d = reverse ? -diff : diff;
-    if (d > 2)  return '↑↑';
-    if (d > 0.5)return '↑';
-    if (d > -0.5)return '→';
-    if (d > -2) return '↓';
-    return '↓↓';
-  };
- 
-  if (pr) {
-    document.getElementById('pfPressIcon').textContent = trendIcon(pr.diff);
-    document.getElementById('pfPressVal').textContent  = pr.newest.toFixed(0)+' hPa';
-    document.getElementById('pfPressDiff').textContent = (pr.diff>0?'+':'')+pr.diff.toFixed(1)+' hPa';
-  }
-  if (tp) {
-    document.getElementById('pfTempIcon').textContent = trendIcon(tp.diff);
-    document.getElementById('pfTempVal').textContent  = (tp.newest>0?'+':'')+tp.newest.toFixed(1)+'°';
-    document.getElementById('pfTempDiff').textContent = (tp.diff>0?'+':'')+tp.diff.toFixed(1)+'°';
-  }
-  if (hm) {
-    document.getElementById('pfHumiIcon').textContent = trendIcon(hm.diff);
-    document.getElementById('pfHumiVal').textContent  = hm.newest.toFixed(0)+'%';
-    document.getElementById('pfHumiDiff').textContent = (hm.diff>0?'+':'')+hm.diff.toFixed(1)+'%';
-  }
- 
-  // ── Balų sistema – TIK iš vietinių daviklių ──
-  let score = 0;
-  if (pr) {
-    if (pr.diff > 3)   score += 2;  // Slėgis sparčiai kyla = puikus oras
-    if (pr.diff > 1)   score += 1;  // Kyla = gerėja
-    if (pr.diff < -1)  score -= 1;  // Krenta = blogėja
-    if (pr.diff < -3)  score -= 2;  // Sparčiai krenta = blogas oras
-  }
-  if (hm) {
-    if (hm.diff > 5)   score -= 1;  // Drėgmė kyla >5%
-    if (hm.diff > 10)  score -= 1;  // Kyla >10% = tikėtinas lietus
-    if (hm.diff < -5)  score += 1;  // Krenta = gerėja
-  }
-  if (tp) {
-    if (tp.diff < -2)  score -= 1;  // Temp krenta >2°
-    if (tp.diff < -4)  score -= 1;  // Krenta >4°
-  }
-  // Kombinacijos iš daviklių
-  if (hm && pr && hm.diff > 5 && pr.diff < 0) score -= 1;
-  if (hm && tp && hm.diff > 5 && tp.diff < -1) score -= 1;
- 
-  const el_emoji = document.getElementById('localForecastEmoji');
-  const el_text  = document.getElementById('localForecastText');
-  const el_sub   = document.getElementById('localForecastSub');
- 
-  if      (score >= 3)  { el_emoji.textContent='☀️';  el_text.textContent='PUIKUS ORAS';       el_text.style.color='#f1c40f'; el_sub.textContent='Slėgis sparčiai kyla'; }
-  else if (score >= 1)  { el_emoji.textContent='🌤️'; el_text.textContent='GERĖJA';            el_text.style.color='#07e000'; el_sub.textContent='Oras turėtų pagerėti'; }
-  else if (score === 0) { el_emoji.textContent='🌥️'; el_text.textContent='STABILUS';          el_text.style.color='#aaa';    el_sub.textContent='Didelių pokyčių nesitikima'; }
-  else if (score >= -2) { el_emoji.textContent='🌧️'; el_text.textContent='BLOGĖJA';           el_text.style.color='#f39c12'; el_sub.textContent='Tikėtini krituliai'; }
-  else if (score >= -3) { el_emoji.textContent='⛈️'; el_text.textContent='TIKĖTINAS LIETUS';  el_text.style.color='#e67e22'; el_sub.textContent='Didėjanti lietaus tikimybė'; }
-  else                  { el_emoji.textContent='🌩️'; el_text.textContent='BLOGŲ ORŲ GRĖSMĖ'; el_text.style.color='#e74c3c'; el_sub.textContent='Slėgis sparčiai krenta!'; }
- 
-  if (pr) document.getElementById('pfTimeInfo').textContent =
-    `Vietiniai davikliai · Tendencija per ${pr.hours}h`;
-}
- 
-async function fetchOWM() {
-  try {
-    // Dabartiniai orai
-    const r1 = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${OWM_CITY}&appid=${OWM_KEY}&units=metric&lang=lt`);
-    const d1 = await r1.json();
-    document.getElementById('owmTemp').textContent = (d1.main.temp>0?'+':'')+d1.main.temp.toFixed(0)+'°';
-    document.getElementById('owmDesc').textContent = d1.weather[0].description;
-    document.getElementById('owmFeels').textContent = 'Junta kaip: '+(d1.main.feels_like>0?'+':'')+d1.main.feels_like.toFixed(0)+'°C';
-    document.getElementById('owmIcon').textContent = owmEmoji(d1.weather[0].icon);
-    window._owmIcon = d1.weather[0].icon;
-    document.getElementById('owmHumi').textContent = d1.main.humidity+'%';
-    document.getElementById('owmWind').textContent = d1.wind.speed.toFixed(1)+' m/s';
-    document.getElementById('owmPressure').textContent = d1.main.pressure+' hPa';
-    document.getElementById('owmClouds').textContent = d1.clouds.all+'%';
- 
-    // Rytojaus prognozė
-    const r2 = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${OWM_CITY}&appid=${OWM_KEY}&units=metric`);
-    const d2 = await r2.json();
-    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
-    const tDay = tomorrow.toISOString().split('T')[0];
-    let tMax=-99, tMin=99;
-    d2.list.forEach(item => {
-      if (item.dt_txt.startsWith(tDay)) {
-        if (item.main.temp_max > tMax) tMax = item.main.temp_max;
-        if (item.main.temp_min < tMin) tMin = item.main.temp_min;
-      }
-    });
-    if (tMax !== -99) document.getElementById('fcMax').textContent = (tMax>0?'+':'')+tMax.toFixed(0)+'°';
-    if (tMin !== 99)  document.getElementById('fcMin').textContent = (tMin>0?'+':'')+tMin.toFixed(0)+'°';
- 
-  } catch(e) { console.error('OWM klaida:', e); }
-}
- 
-async function fetchAll() {
   const btn = document.getElementById('refreshBtn');
   btn.textContent = '↻  Kraunama...';
   btn.style.opacity = '0.5';
-  await Promise.all([fetchData(), fetchOWM()]);
-  if (chartsVisible) await fetchCharts();
+  document.getElementById('statusText').textContent = 'Atnaujinama...';
+
+  try {
+    const res = await fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=8`);
+    const data = await res.json();
+    const feeds = data.feeds || [];
+
+    const getLatest = (field) => {
+      for (let i = feeds.length - 1; i >= 0; i--)
+        if (feeds[i][field] !== null && feeds[i][field] !== undefined && feeds[i][field] !== "")
+          return parseFloat(feeds[i][field]);
+      return NaN;
+    };
+
+    const vT = getLatest('field1'), vH = getLatest('field2');
+    const lT = getLatest('field3'), lH = getLatest('field4');
+    const lP = getLatest('field5'); // Pasiimame atmosferos slėgį
+
+    document.getElementById('vidTemp').textContent = isNaN(vT) ? '--' : vT.toFixed(1);
+    document.getElementById('vidHumi').textContent = isNaN(vH) ? '--%' : vH.toFixed(1) + '%';
+    document.getElementById('vidHumiBar').style.width = isNaN(vH) ? '0%' : vH + '%';
+    
+    document.getElementById('laukTemp').textContent = isNaN(lT) ? '--' : lT.toFixed(1);
+    document.getElementById('laukHumi').textContent = isNaN(lH) ? '--%' : lH.toFixed(1) + '%';
+    document.getElementById('laukHumiBar').style.width = isNaN(lH) ? '0%' : lH + '%';
+    
+    // Atvaizduojame slėgį
+    document.getElementById('laukPres').textContent = isNaN(lP) ? '---- hPa' : lP.toFixed(1) + ' hPa';
+
+    const now = new Date();
+    document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('statusText').textContent = 'Gyvas · ' + now.toLocaleDateString('lt-LT');
+
+  } catch(e) {
+    document.getElementById('statusText').textContent = 'Klaida · Tikrink API';
+  }
+
   btn.textContent = '↻  Atnaujinti duomenis';
   btn.style.opacity = '1';
 }
- 
-// Paleisti
-fetchAll();
+
+fetchData();
+fetchCharts();
 setInterval(fetchData, 30000);
-setInterval(fetchOWM, 600000);
-setInterval(() => { if (chartsVisible) fetchCharts(); }, 60000);
+setInterval(fetchCharts, 60000);
 </script>
 </body>
 </html>
