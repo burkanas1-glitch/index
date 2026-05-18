@@ -212,18 +212,65 @@ const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomi
       }
     }
 
-    // --- INTERNETINIAI ORAI (OWM API) ---
+    // --- INTERNETINIAI ORAI (OWM API) - IŠTAISYTA VERSIJA ---
     async function fetchOWM() {
       try {
+        // 1. Dabartiniai orai regionui
         const r1 = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${OWM_CITY}&appid=${OWM_KEY}&units=metric`);
+        if (!r1.ok) throw new Error('OWM dabartinių orų klaida');
         const d1 = await r1.json();
         
+        // 2. Rytojaus prognozė
         const r2 = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${OWM_CITY}&appid=${OWM_KEY}&units=metric`);
+        if (!r2.ok) throw new Error('OWM prognozės klaida');
         const d2 = await r2.json();
 
-        if (d1.main) {
+        // Tikriname ir išvedame dabartinius orus
+        if (d1 && d1.main) {
           document.getElementById('owmCurr').textContent = d1.main.temp.toFixed(1) + ' °C';
-          globalOwmIcon = d1.weather[0].icon;
+          
+          if (d1.weather && d1.weather[0]) {
+            globalOwmIcon = d1.weather[0].icon;
+            document.getElementById('owmTime').textContent = `Meteo regionas: ${d1.weather[0].description}`;
+          }
+          
+          // TRIJŲ LYGIŲ VĖJO VIZUALIZACIJA (Sutvarkyta)
+          if (d1.wind) {
+            const wind = d1.wind.speed;
+            globalWindSpeed = wind;
+            const windEl = document.getElementById('owmWind');
+            
+            if (wind >= 14) {
+              windEl.innerHTML = `🌪️ <span style="color:#e74c3c; font-weight:800;">${wind.toFixed(1)} m/s</span>`;
+            } else if (wind >= 8) {
+              windEl.innerHTML = `💨 <span style="color:#f39c12; font-weight:600;">${wind.toFixed(1)} m/s</span>`;
+            } else {
+              windEl.innerHTML = `🍃 ${wind.toFixed(1)} m/s`;
+            }
+          }
+        }
+
+        // Tikriname ir skaičiuojame rytojaus Max/Min
+        if (d2 && d2.list && d2.list.length > 0) {
+          let maxTemp = -99;
+          let minTemp = 99;
+          // Paimame artimiausias 8 pozicijas (~24 valandas)
+          const limit = Math.min(d2.list.length, 8);
+          for (let i = 0; i < limit; i++) {
+            const f = d2.list[i];
+            if (f.main) {
+              if (f.main.temp_max > maxTemp) maxTemp = f.main.temp_max;
+              if (f.main.temp_min < minTemp) minTemp = f.main.temp_min;
+            }
+          }
+          document.getElementById('fcMax').textContent = maxTemp !== -99 ? maxTemp.toFixed(1) + ' °C' : '--.- °C';
+          document.getElementById('fcMin').textContent = minTemp !== 99 ? minTemp.toFixed(1) + ' °C' : '--.- °C';
+        }
+      } catch (err) {
+        console.error("OWM klaida kodo viduje:", err);
+        document.getElementById('owmTime').textContent = "Nepavyko atnaujinti OWM";
+      }
+    }
           
           // TRIJŲ LYGIŲ VĖJO VIZUALIZACIJA
           const wind = d1.wind.speed;
