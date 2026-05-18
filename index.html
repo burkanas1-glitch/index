@@ -35,10 +35,9 @@ h1{font-size:28px;font-weight:800;line-height:1;color:var(--tx);}
 .temp-unit{font-size:20px;color:var(--mu);vertical-align:super;font-family:'Space Mono',monospace;}
 .temp-label{font-size:11px;color:var(--mu);font-family:'Space Mono',monospace;letter-spacing:1px;}
 
-/* Slėgis lauko kortelėje */
 .pressure-row{margin-top:14px;padding-top:14px;border-top:1px dashed var(--border);display:flex;justify-content:space-between;align-items:center;}
 .pressure-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--mu);letter-spacing:1px;}
-.pressure-value{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:#a855f7;}
+.pressure-value{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:#9b59b6;}
 
 .humi-section{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
 .card.lauke .humi-section{border-top:1px dashed var(--border);}
@@ -164,7 +163,7 @@ h1{font-size:28px;font-weight:800;line-height:1;color:var(--tx);}
   <div class="comfort-bar" id="laukComfort" style="background:#888">KRAUNAMA</div>
 </div>
 
-<div class="section-label">⛅ Regioniniai orai – Bauska</div>
+<div class="section-label">⛅ Orai – Žeimelis / Pakruojis</div>
 <div class="owm-card" style="animation:fadeUp .6s ease .25s both;">
   <div class="owm-top">
     <div>
@@ -262,7 +261,7 @@ h1{font-size:28px;font-weight:800;line-height:1;color:var(--tx);}
 const CHANNEL_ID  = '3294006';
 const READ_API_KEY = 'Y67A8GD4V5FINMWW';
 const OWM_KEY     = 'A8120352ed2ca3d49994a73a13471108';
-const OWM_CITY    = 'Bauska,LV';
+const OWM_CITY    = 'Pakruojis,LT';
 
 let mode = 'period', currentPeriod = '1H';
 let globalWindSpeed = 0;
@@ -315,7 +314,7 @@ const pressChart = new Chart(document.getElementById('pressChart').getContext('2
 });
 
 function comfort(t, h) {
-  if (isNaN(t)||isNaN(h)) return { txt:'?', bg:'#444' };
+  if (isNaN(t)||isNaN(h)) return { txt:'?', bg:#444' };
   if (t < 16)  return { txt:'ŠALTA',   bg:'#00d4ff' };
   if (t > 28)  return { txt:'KARŠTA',  bg:'#e74c3c' };
   if (h > 70)  return { txt:'DRĖGNA',  bg:'#f39c12' };
@@ -448,6 +447,7 @@ async function fetchData() {
         if (feeds[i][field]!=null) return parseFloat(feeds[i][field]);
       return NaN;
     };
+    
     const vT=get('field1'), vH=get('field2'), lT=get('field3'), lH=get('field4'), pr=get('field5');
 
     document.getElementById('vidTemp').textContent = isNaN(vT)?'--':vT.toFixed(1);
@@ -488,7 +488,7 @@ function executeZambrettiForecast(feeds, currentTemp, currentHumi) {
   }
 
   const newest = pressH[pressH.length - 1];
-  const targetTime = newest.t - 2 * 60 * 60 * 1000;
+  const targetTime = newest.t - 3 * 60 * 60 * 1000;
   let oldest = pressH[0];
   for (const r of pressH) {
     if (Math.abs(r.t - targetTime) < Math.abs(oldest.t - targetTime)) oldest = r;
@@ -539,7 +539,7 @@ function executeZambrettiForecast(feeds, currentTemp, currentHumi) {
     zEmoji = "⚠️";
     zTxt = "STIPRUS VĖJAS / AUDRA";
     zColor = "#e74c3c";
-    zSub = `Bauskės stotyje gūsiai siekia ${globalWindSpeed} m/s! Saugokitės gūsių`;
+    zSub = `Gūsiai siekia ${globalWindSpeed} m/s! Saugokitės gūsių`;
   }
 
   document.getElementById('localForecastEmoji').textContent = zEmoji;
