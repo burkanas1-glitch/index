@@ -163,7 +163,7 @@ h1{font-size:28px;font-weight:800;line-height:1;color:var(--tx);}
   <div class="comfort-bar" id="laukComfort" style="background:#888">KRAUNAMA</div>
 </div>
 
-<div class="section-label">⛅ Orai – Žeimelis / Pakruojis</div>
+<div class="section-label">⛅ Orai – Pakruojis / Žeimelis</div>
 <div class="owm-card" style="animation:fadeUp .6s ease .25s both;">
   <div class="owm-top">
     <div>
@@ -314,7 +314,7 @@ const pressChart = new Chart(document.getElementById('pressChart').getContext('2
 });
 
 function comfort(t, h) {
-  if (isNaN(t)||isNaN(h)) return { txt:'?', bg:#444' };
+  if (isNaN(t)||isNaN(h)) return { txt:'?', bg:'#444' };
   if (t < 16)  return { txt:'ŠALTA',   bg:'#00d4ff' };
   if (t > 28)  return { txt:'KARŠTA',  bg:'#e74c3c' };
   if (h > 70)  return { txt:'DRĖGNA',  bg:'#f39c12' };
@@ -438,13 +438,13 @@ async function fetchCharts() {
 async function fetchData() {
   try {
     const resp = await fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=120`);
-    if (!resp.ok) throw new Error('ThingSpeak klaida: ' + resp.status);
+    if (!resp.ok) throw new Error('ThingSpeak klaida');
     const data = await resp.json();
     const feeds = data.feeds || [];
     
     const get = field => {
       for (let i=feeds.length-1;i>=0;i--)
-        if (feeds[i][field]!=null) return parseFloat(feeds[i][field]);
+        if (feeds[i][field]!=null && feeds[i][field]!=='') return parseFloat(feeds[i][field]);
       return NaN;
     };
     
@@ -456,7 +456,6 @@ async function fetchData() {
     document.getElementById('laukTemp').textContent = isNaN(lT)?'--':lT.toFixed(1);
     document.getElementById('laukHumi').textContent = isNaN(lH)?'--%':lH.toFixed(1)+'%';
     document.getElementById('laukHumiBar').style.width = isNaN(lH)?'0%':lH+'%';
-    
     document.getElementById('currentLivePressure').textContent = isNaN(pr)?'-- hPa':pr.toFixed(1)+' hPa';
 
     const cv = comfort(vT, vH);
@@ -478,7 +477,7 @@ async function fetchData() {
 
 function executeZambrettiForecast(feeds, currentTemp, currentHumi) {
   const getHistory = (field) => feeds
-    .filter(f => f[field] != null)
+    .filter(f => f[field] != null && f[field] !== '')
     .map(f => ({ t: new Date(f.created_at).getTime(), v: parseFloat(f[field]) }));
 
   const pressH = getHistory('field5');
