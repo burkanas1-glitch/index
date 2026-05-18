@@ -111,11 +111,12 @@
   </div>
 
   <script>
-    // --- KONFIGŪRACIJA ---
-    const CHANNEL_ID  = '3294006';
-const READ_API_KEY = 'Y67A8GD4V5FINMWW';
-const OWM_KEY     = 'a8120352ed2ca3d49994a73a13471108'; // Ištaisyta mažosiomis raidėmis saugumui / standartui
-const OWM_CITY    = 'Pakruojis,LT';
+    // --- KONFIGŪRACIJA (Tavo tikrieji veikiantys raktai) ---
+    const CHANNEL_ID    = '2366113';
+    const READ_API_KEY  = 'OX8370NLYG96U6PT';
+    const OWM_KEY       = 'df6e85871f30df936082dc0a95ff9e6c';
+    const OWM_CITY      = 'Pakruojis,LT';
+
     // Globalūs kintamieji algoritmų sujungimui
     let globalWindSpeed = 0;
     let globalOwmIcon = "";
@@ -123,7 +124,16 @@ const OWM_CITY    = 'Pakruojis,LT';
     let chartsVisible = false;
     let tempChart, humiChart, presChart;
 
-    // --- SAKYTI „SAULĖTA“ ARBA „GIEDRA NAKTIS“ ---
+    // Apsauga nuo tuščių reikšmių iš tavo senojo kodo
+    function getVal(feed, field) {
+      if(!feed) return null;
+      let v = feed[field];
+      if(v === undefined || v === null || v.trim() === "") return null;
+      let n = parseFloat(v);
+      return isNaN(n) ? null : n;
+    }
+
+    // --- IŠMANUS EMOJI PARINKIMAS (DIENA / NAKTIS) ---
     function owmEmoji(icon) {
       if (!icon) return '⛅';
       if (icon.startsWith('01')) return icon.endsWith('n') ? '✨' : '☀️'; 
@@ -136,54 +146,65 @@ const OWM_CITY    = 'Pakruojis,LT';
       return '⛅';
     }
 
-    // --- PAGRINDINIS DUOMENŲ SURNIKIMAS ---
+    // --- PAGRINDINIS DUOMENŲ SURINKIMAS (Tavo patikima logika) ---
     async function fetchData() {
       try {
-        // 1. Imame ThingSpeak duomenis (paskutinius 60 įrašų grafikams + dabartį)
-        const tsRes = await fetch(`https://api.thethingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=60`);
-        const tsData = await tsRes.json();
-        
-        if (!tsData.feeds || tsData.feeds.length === 0) return;
-        
-        const current = tsData.feeds[tsData.feeds.length - 1];
-        
+        const resp = await fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=120`);
+        if (!resp.ok) throw new Error('ThingSpeak klaida');
+        const data = await resp.json();
+        const feeds = data.feeds || [];
+        if (feeds.length === 0) return;
+
+        // Ieškome paskutinių realių reikšmių (Apsauga nuo nulių)
+        let vT=null, vH=null, lT=null, lH=null, pr=null, lastValidTime=null;
+        for (let i = feeds.length - 1; i >= 0; i--) {
+          let f = feeds[i];
+          if(vT===null) vT=getVal(f, 'field1');
+          if(vH===null) vH=getVal(f, 'field2');
+          if(lT===null) lT=getVal(f, 'field3');
+          if(lH===null) lH=getVal(f, 'field4');
+          if(pr===null) {
+            pr=getVal(f, 'field5');
+            if(pr!==null) lastValidTime = f.created_at;
+          }
+          if(vT!==null && vH!==null && lT!==null && lH!==null && pr!==null) break;
+        }
+
         // Išvedame skaičius į ekraną
-        const tIn   = parseFloat(current.field1);
-        const hIn   = parseFloat(current.field2);
-        const tLauk = parseFloat(current.field3);
-        const hLauk = parseFloat(current.field4);
-        const pLauk = parseFloat(current.field5);
+        if(vT!==null) document.getElementById('inTemp').textContent = vT.toFixed(1) + ' °C';
+        if(vH!==null) document.getElementById('inHumi').textContent = Math.round(vH) + ' %';
+        if(lT!==null) document.getElementById('laukTemp').textContent = lT.toFixed(1) + ' °C';
+        if(lH!==null) document.getElementById('laukHumi').textContent = Math.round(lH) + ' %';
+        if(pr!==null) document.getElementById('laukPres').textContent = Math.round(pr) + ' hPa';
 
-        if(!isNaN(tIn))   document.getElementById('inTemp').textContent = tIn.toFixed(1) + ' °C';
-        if(!isNaN(hIn))   document.getElementById('inHumi').textContent = Math.round(hIn) + ' %';
-        if(!isNaN(tLauk)) document.getElementById('laukTemp').textContent = tLauk.toFixed(1) + ' °C';
-        if(!isNaN(hLauk)) document.getElementById('laukHumi').textContent = Math.round(hLauk) + ' %';
-        if(!isNaN(pLauk)) document.getElementById('laukPres').textContent = Math.round(pLauk) + ' hPa';
-
-        // Laiko žyma
-        if (current.created_at) {
-          const d = new Date(current.created_at);
+        // Laiko atvaizdavimas
+        if (lastValidTime) {
+          const d = new Date(lastValidTime);
           document.getElementById('tsTime').textContent = `Kiemas atnaujintas: ${d.toLocaleTimeString('lt-LT')}`;
         }
 
-        // 2. Skaičiuojame slėgio tendenciją (Delta P per 3 valandas)
+        // Slėgio tendencijos skaičiavimas per 3 valandas (iš tavo kodo)
         let trend = 0.0;
-        if (tsData.feeds.length >= 12) { 
-          // Kadangi siunčiama kas 15 min, 12 įrašų = 3 valandos
-          const pastFeed = tsData.feeds[tsData.feeds.length - 12];
-          const pastPres = parseFloat(pastFeed.field5);
-          if (!isNaN(pastPres) && !isNaN(pLauk)) {
-            trend = pLauk - pastPres;
+        if (feeds.length >= 12 && pr !== null) {
+          let pastPres = null;
+          // Ieškome slėgio reikšmės prieš ~3 valandas (12 įrašų atgal)
+          let targetIndex = feeds.length - 12;
+          for(let i = targetIndex; i >= 0; i--) {
+            pastPres = getVal(feeds[i], 'field5');
+            if(pastPres !== null) break;
+          }
+          if (pastPres !== null) {
+            trend = pr - pastPres;
           }
         }
         document.getElementById('presTrend').textContent = (trend >= 0 ? '+' : '') + trend.toFixed(1) + ' hPa/3h';
 
-        // 3. Paleidžiame vietinį Zambretti algoritmą
-        executeZambrettiForecast(pLauk, trend, tLauk, hLauk);
+        // Paleidžiame vietinį Zambretti algoritmą
+        executeZambrettiForecast(pr, trend, lT, lH);
 
-        // 4. Jei grafikai atverti, atnaujiname juos
+        // Jei grafikai atverti, atnaujiname juos
         if (chartsVisible) {
-          updateCharts(tsData.feeds);
+          updateCharts(feeds);
         }
 
       } catch (err) {
@@ -194,11 +215,9 @@ const OWM_CITY    = 'Pakruojis,LT';
     // --- INTERNETINIAI ORAI (OWM API) ---
     async function fetchOWM() {
       try {
-        // Dabartiniai orai regionui
         const r1 = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${OWM_CITY}&appid=${OWM_KEY}&units=metric`);
         const d1 = await r1.json();
         
-        // Rytojaus prognozė
         const r2 = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${OWM_CITY}&appid=${OWM_KEY}&units=metric`);
         const d2 = await r2.json();
 
@@ -206,7 +225,7 @@ const OWM_CITY    = 'Pakruojis,LT';
           document.getElementById('owmCurr').textContent = d1.main.temp.toFixed(1) + ' °C';
           globalOwmIcon = d1.weather[0].icon;
           
-          // IŠMANUSIS VĖJO APDOROJIMAS
+          // TRIJŲ LYGIŲ VĖJO VIZUALIZACIJA
           const wind = d1.wind.speed;
           globalWindSpeed = wind;
           const windEl = document.getElementById('owmWind');
@@ -219,14 +238,12 @@ const OWM_CITY    = 'Pakruojis,LT';
             windEl.innerHTML = `🍃 ${wind.toFixed(1)} m/s`;
           }
           
-          document.getElementById('owmTime').textContent = `Meteo.lt regionas: ${d1.weather[0].description}`;
+          document.getElementById('owmTime').textContent = `Meteo regionas: ${d1.weather[0].description}`;
         }
 
-        // Rytojaus temperatūrų paieška iš sąrašo
         if (d2.list) {
           let maxTemp = -99;
           let minTemp = 99;
-          // Paimame sekančias 8 pozicijas (~24 valandas į priekį)
           for (let i = 0; i < 8; i++) {
             const f = d2.list[i];
             if (f.main.temp_max > maxTemp) maxTemp = f.main.temp_max;
@@ -243,14 +260,14 @@ const OWM_CITY    = 'Pakruojis,LT';
     // --- VIETINIS ZAMBRETTI ALGORITMAS ---
     function executeZambrettiForecast(P, Z, temp, humi) {
       const card = document.getElementById('forecastCard');
-      if (isNaN(P) || P < 800) return; // Jei jutiklio duomenys sugadinti
+      if (P === null || P < 800) return; 
 
       let zEmoji = "⛅";
       let zTxt = "Stabilu";
       let zSub = "Oras nesikeičia";
-      let zColor = "#00a8ff"; // Standartinė melsva
+      let zColor = "#00a8ff"; 
 
-      // 1. KRITIMO TENDENCIJA (Ciklonas artėja)
+      // 1. KRITIMO TENDENCIJA
       if (Z <= -1.5) {
         if (P < 1005) {
           zEmoji = "🌧️"; zTxt = "Orų prastėjimas / Lietus"; zColor = "#e74c3c";
@@ -263,10 +280,10 @@ const OWM_CITY    = 'Pakruojis,LT';
           zSub = "Giedra traukiasi, slėgis po truputį krenta";
         }
       }
-      // 2. KYLANTI TENDENCIJA (Anticiklonas ateina)
+      // 2. KYLANTI TENDENCIJA
       else if (Z >= 1.5) {
         if (P > 1015) {
-          zEmoji = owmEmoji(globalOwmIcon); // Naudoja naktį mėnulį, dieną saulę
+          zEmoji = owmEmoji(globalOwmIcon); 
           zTxt = "Oras gerėja / Giedrėja"; zColor = "#2ecc71";
           zSub = "Ateina aukštas slėgis, debesys sklaidosi";
         } else {
@@ -274,7 +291,7 @@ const OWM_CITY    = 'Pakruojis,LT';
           zSub = "Atmosfera stabilizuojasi, krituliai traukiasi";
         }
       }
-      // 3. STABILUS SLĖGIS (Nėra staigių kitimų)
+      // 3. STABILUS SLĖGIS
       else {
         if (P > 1015) {
           zEmoji = owmEmoji(globalOwmIcon);
@@ -284,7 +301,6 @@ const OWM_CITY    = 'Pakruojis,LT';
           zEmoji = "☁️"; zTxt = "Nuolatinis debesuotumas"; zColor = "#7f8c8d";
           zSub = "Slėgis žemas, bet stovi vietoje";
         } else {
-          // Papildomas filtras drėgmei (kad rasa neapgautų)
           if (humi > 85 && Z < 0) {
             zEmoji = "☁️"; zTxt = "Drėgna / Debesuota"; zColor = "#34495e";
             zSub = "Aukšta vietinė drėgmė, bet slėgis stabilus";
@@ -295,14 +311,14 @@ const OWM_CITY    = 'Pakruojis,LT';
         }
       }
 
-      // ŽIEMOS IR ŠALČIO KOREKCIJA
-      if (temp <= 1 && (zTxt.includes("Lietus") || zTxt.includes("krituliai"))) {
+      // ŽIEMOS FILTRAS
+      if (temp !== null && temp <= 1 && (zTxt.includes("Lietus") || zTxt.includes("krituliai"))) {
         zEmoji = "❄️";
         zTxt = zTxt.replace("Lietus", "Sniegas / Šlapdriba");
         zSub = "Esant žemai temperatūrai tikėtinas sniegas";
       }
 
-      // GLAVNAS AUDROS SAUGIKLIS (Iš OWM vėjo duomenų)
+      // AUDROS FILTRAS (OWM)
       if (globalWindSpeed >= 14) {
         zEmoji = "⚠️";
         zTxt = "STIPRUS VĖJAS / AUDRA";
@@ -310,14 +326,14 @@ const OWM_CITY    = 'Pakruojis,LT';
         zSub = `Gūsiai siekia ${globalWindSpeed} m/s! Saugokite daiktus lauke`;
       }
 
-      // Atvaizduojame viską kortelėje
+      // Atvaizduojame rezultatus
       document.getElementById('zEmoji').textContent = zEmoji;
       document.getElementById('zTxt').textContent = zTxt;
       document.getElementById('zSub').textContent = zSub;
       card.style.borderLeftColor = zColor;
     }
 
-    // --- GRAFIKŲ STRUKTŪRA IR VALDYMAS ---
+    // --- GRAFIKŲ STRUKTŪRA ---
     function toggleCharts() {
       const wrapper = document.getElementById('chartsWrapper');
       const btn = document.getElementById('toggleChartsBtn');
@@ -326,7 +342,7 @@ const OWM_CITY    = 'Pakruojis,LT';
         wrapper.style.display = 'flex';
         btn.textContent = '📊 Paslėpti grafikus';
         chartsVisible = true;
-        fetchData(); // Iškart užpildo duomenis
+        fetchData(); 
       } else {
         wrapper.style.display = 'none';
         btn.textContent = '📊 Rodyti grafikus';
@@ -380,7 +396,6 @@ const OWM_CITY    = 'Pakruojis,LT';
         return d.toLocaleTimeString('lt-LT', { hour: '2-digit', minute: '2-digit' });
       });
 
-      // Pildome masyvus
       tempChart.data.labels = labels;
       tempChart.data.datasets[0].data = feeds.map(f => parseFloat(f.field1));
       tempChart.data.datasets[1].data = feeds.map(f => parseFloat(f.field3));
@@ -392,22 +407,18 @@ const OWM_CITY    = 'Pakruojis,LT';
       presChart.data.labels = labels;
       presChart.data.datasets[0].data = feeds.map(f => parseFloat(f.field5));
 
-      // Atnaujiname drobę ekrane
       tempChart.update('none');
       humiChart.update('none');
       presChart.update('none');
     }
 
     // --- LAIKO CIKLAI ---
-    // ThingSpeak tikriname kas 30 sekundžių (dažniau nereikia, kad neapkrautume serverio)
     fetchData();
     setInterval(fetchData, 30000);
 
-    // OWM regiono duomenis atnaujiname kas 10 minučių (taupome nemokamą planą)
     fetchOWM();
     setInterval(fetchOWM, 600000);
 
-    // Registruojame PWA Service Worker (kad telefonas suprastų kaip programėlę)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW klaida:', err));
