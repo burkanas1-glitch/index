@@ -603,7 +603,7 @@ function calcLocalForecast(feeds) {
     document.getElementById('pfHumiDiff').textContent = (hm.diff>0?'+':'')+hm.diff.toFixed(1)+'%';
   }
  
-  // ── Balų sistema (griežtesnė) ──────────────
+  // ── Balų sistema – TIK iš vietinių daviklių ──
   let score = 0;
   if (pr) {
     if (pr.diff > 3)   score += 2;  // Slėgis sparčiai kyla = puikus oras
@@ -612,19 +612,16 @@ function calcLocalForecast(feeds) {
     if (pr.diff < -3)  score -= 2;  // Sparčiai krenta = blogas oras
   }
   if (hm) {
-    if (hm.diff > 5)   score -= 1;  // Drėgmė kyla >5% = pradeda blogėti
+    if (hm.diff > 5)   score -= 1;  // Drėgmė kyla >5%
     if (hm.diff > 10)  score -= 1;  // Kyla >10% = tikėtinas lietus
     if (hm.diff < -5)  score += 1;  // Krenta = gerėja
   }
   if (tp) {
-    if (tp.diff < -2)  score -= 1;  // Temp krenta >2° = blogėja
-    if (tp.diff < -4)  score -= 1;  // Krenta >4° = tikrai blogėja
+    if (tp.diff < -2)  score -= 1;  // Temp krenta >2°
+    if (tp.diff < -4)  score -= 1;  // Krenta >4°
   }
- 
-  // Kombinacija: drėgmė kyla + slėgis kyla = lietus jau yra bet gerės
-  // Kombinacija: drėgmė kyla + slėgis krenta = blogėja sparčiai
+  // Kombinacijos iš daviklių
   if (hm && pr && hm.diff > 5 && pr.diff < 0) score -= 1;
-  // Kombinacija: drėgmė kyla + temp krenta = tikėtinas lietus
   if (hm && tp && hm.diff > 5 && tp.diff < -1) score -= 1;
  
   const el_emoji = document.getElementById('localForecastEmoji');
@@ -639,7 +636,7 @@ function calcLocalForecast(feeds) {
   else                  { el_emoji.textContent='🌩️'; el_text.textContent='BLOGŲ ORŲ GRĖSMĖ'; el_text.style.color='#e74c3c'; el_sub.textContent='Slėgis sparčiai krenta!'; }
  
   if (pr) document.getElementById('pfTimeInfo').textContent =
-    `Tendencija per ${pr.hours}h · Duomenys iš BMP280`;
+    `Vietiniai davikliai · Tendencija per ${pr.hours}h`;
 }
  
 async function fetchOWM() {
@@ -651,7 +648,9 @@ async function fetchOWM() {
     document.getElementById('owmDesc').textContent = d1.weather[0].description;
     document.getElementById('owmFeels').textContent = 'Junta kaip: '+(d1.main.feels_like>0?'+':'')+d1.main.feels_like.toFixed(0)+'°C';
     document.getElementById('owmIcon').textContent = owmEmoji(d1.weather[0].icon);
-    window._owmIcon = d1.weather[0].icon; // Išsaugom dabartinei būklei
+    window._owmIcon = d1.weather[0].icon;
+    document.getElementById('owmHumi').textContent = d1.main.humidity+'%';
+    document.getElementById('owmWind').textContent = d1.wind.speed.toFixed(1)+' m/s';
     document.getElementById('owmPressure').textContent = d1.main.pressure+' hPa';
     document.getElementById('owmClouds').textContent = d1.clouds.all+'%';
  
