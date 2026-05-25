@@ -35,6 +35,8 @@ h1{font-size:28px;font-weight:800;line-height:1;color:var(--tx);}
 .temp-unit{font-size:20px;color:var(--mu);vertical-align:super;font-family:'Space Mono',monospace;}
 .temp-label{font-size:11px;color:var(--mu);font-family:'Space Mono',monospace;letter-spacing:1px;}
 
+.dewpoint-lbl{font-family:'Space Mono',monospace;font-size:11px;color:#a855f7;margin-top:4px;letter-spacing:0.5px;}
+
 .pressure-row{margin-top:14px;padding-top:14px;border-top:1px dashed var(--border);display:flex;justify-content:space-between;align-items:center;}
 .pressure-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--mu);letter-spacing:1px;}
 .pressure-value{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:#9b59b6;}
@@ -127,6 +129,7 @@ h1{font-size:28px;font-weight:800;line-height:1;color:var(--tx);}
   <div class="temp-display">
     <div class="temp-icon">🏠</div>
     <div><span class="temp-value" id="vidTemp">--</span><span class="temp-unit">°C</span></div>
+    <div class="dewpoint-lbl" id="vidDewPoint">Rasos taškas: --°C</div>
     <div class="temp-label">TEMPERATŪRA</div>
   </div>
   <div class="humi-section">
@@ -144,6 +147,7 @@ h1{font-size:28px;font-weight:800;line-height:1;color:var(--tx);}
   <div class="temp-display">
     <div class="temp-icon">🍃</div>
     <div><span class="temp-value" id="laukTemp">--</span><span class="temp-unit">°C</span></div>
+    <div class="dewpoint-lbl" id="laukDewPoint">Rasos taškas: --°C</div>
     <div class="temp-label">TEMPERATŪRA</div>
   </div>
   
@@ -162,7 +166,7 @@ h1{font-size:28px;font-weight:800;line-height:1;color:var(--tx);}
   <div class="comfort-bar" id="laukComfort" style="background:#888">KRAUNAMA</div>
 </div>
 
-<div class="section-label">⛅ Orai – Pakruojis / Žeimelis</div>
+<div class="section-label">⛅ Orai – Bauska</div>
 <div class="owm-card" style="animation:fadeUp .6s ease .25s both;">
   <div class="owm-top">
     <div>
@@ -321,6 +325,16 @@ function comfort(t, h) {
   return { txt:'GERAI', bg:'#07e000' };
 }
 
+// MATEMATINĖ FUNKCIJA RASOS TAŠKUI APSKAIČIUOTI
+function calculateDewPoint(t, h) {
+  if (isNaN(t) || isNaN(h) || h <= 0) return '--';
+  const a = 17.625;
+  const b = 243.04;
+  const alpha = ((a * t) / (b + t)) + Math.log(h / 100);
+  const dewPoint = (b * alpha) / (a - alpha);
+  return dewPoint.toFixed(1);
+}
+
 function owmEmoji(icon) {
   if (!icon) return '⛅';
   if (icon.startsWith('01')) return '☀️';
@@ -411,7 +425,6 @@ function executeZambrettiForecast(feeds, currentTemp, currentHumi) {
   let zSub = "Didesnių permainų nenumatoma";
   let zColor = "var(--tx)";
 
-  // Nustatome kritulių tipą pagal temperatūrą
   let precipitationType = "lietus";
   let isWinter = false;
   if (!isNaN(currentTemp)) {
@@ -424,7 +437,13 @@ function executeZambrettiForecast(feeds, currentTemp, currentHumi) {
     }
   }
 
-  if (trendP >= 0.5) { 
+  const owmCloudsElem = document.getElementById('owmClouds');
+  let cloudsPercent = 100;
+  if (owmCloudsElem) {
+    cloudsPercent = parseInt(owmCloudsElem.textContent) || 0;
+  }
+
+  if (trendP >= 0.5) {
     if (currentP > 1020) {
       zTxt = "PUIKUS, GIEDRAS ORAS";
       zEmoji = "☀️"; zColor = "#f1c40f"; zSub = "Aukštas slėgis užtikrina saulėtą dieną";
@@ -435,7 +454,7 @@ function executeZambrettiForecast(feeds, currentTemp, currentHumi) {
       zTxt = `TRUMPALAIKIAI KRITULIAI`;
       zEmoji = "⛅"; zColor = "#00d4ff"; zSub = `Galima trumpa ${precipitationType}, bet tendencija teigiama`;
     }
-  } else if (trendP <= -0.5) { 
+  } else if (trendP <= -0.5) {
     if (currentP > 1018) {
       zTxt = "APNIAUKSTA / ORAS VĖSTA";
       zEmoji = "☁️"; zColor = "#94a3b8"; zSub = "Didėja debesuotumas, slėgis krenta";
@@ -443,7 +462,6 @@ function executeZambrettiForecast(feeds, currentTemp, currentHumi) {
       zTxt = "ORŲ PRASTĖJIMAS"; zEmoji = "🌧️";
       zColor = "#ff6b35"; zSub = `Artėja drėgmės frontas, tikėtinas ${precipitationType}`;
     } else {
-      // ŠTAI ČIA: Atsižvelgiame į temperatūrą ir atskiriame pūgą nuo liūties
       if (isWinter) {
         zTxt = "INTENSYVUS SNIEGAS / PŪGA";
         zEmoji = "❄️";
@@ -455,10 +473,19 @@ function executeZambrettiForecast(feeds, currentTemp, currentHumi) {
       }
       zColor = "#e74c3c";
     }
-  } else { 
+  } else {
     if (currentHumi > 82) {
-      zTxt = `PASTOVŪS KRITULIAI`;
-      zEmoji = "🌧️"; zColor = "#00d4ff"; zSub = `Aukšta drėgmė palaiko užsitęsusį ${precipitationType}`;
+      if (cloudsPercent < 45) {
+        zTxt = "GIEDRAS RYTAS / RASA";
+        zEmoji = "☀️🌫️";
+        zColor = "#f1c40f";
+        zSub = "Aukšta vietinė drėgmė dėl rasos, tačiau dangus giedras";
+      } else {
+        zTxt = `PASTOVŪS KRITULIAI`;
+        zEmoji = "🌧️"; 
+        zColor = "#00d4ff"; 
+        zSub = `Aukšta drėgmė ir debesuotumas palaiko užsitęsusį ${precipitationType}`;
+      }
     } else if (currentP < 1008) {
       zTxt = "STABILIAI BLOGAS ORAS"; zEmoji = "☁️";
       zColor = "#ff6b35"; zSub = "Išlieka žemo slėgio sūkurio įtaka";
@@ -550,6 +577,10 @@ async function fetchData() {
     document.getElementById('laukHumiBar').style.width = isNaN(lH)?'0%':lH+'%';
     document.getElementById('currentLivePressure').textContent = isNaN(pr)?'-- hPa':pr.toFixed(1)+' hPa';
 
+    // ATNAUJINAME RASOS TAŠKO RODMENIS EKRANE
+    document.getElementById('vidDewPoint').textContent = `Rasos taškas: ${calculateDewPoint(vT, vH)}°C`;
+    document.getElementById('laukDewPoint').textContent = `Rasos taškas: ${calculateDewPoint(lT, lH)}°C`;
+
     const cv = comfort(vT, vH);
     const cl = comfort(lT, lH);
     document.getElementById('vidComfort').textContent = cv.txt; document.getElementById('vidComfort').style.background = cv.bg;
@@ -607,7 +638,6 @@ async function fetchAll() {
   btn.style.opacity = '1';
 }
 
-// Inicijavimas paleidžiant
 fetchAll();
 setInterval(fetchData, 30000);
 setInterval(fetchOWM, 600000);
