@@ -637,9 +637,9 @@ function calcLocalForecast(feeds) {
   const el_text  = document.getElementById('localForecastText');
   const el_sub   = document.getElementById('localForecastSub');
 
-  if      (score >= 3)  { el_emoji.textContent='☀️';  el_text.textContent='PUIKUS ORAS';       el_text.style.color='#f1c40f'; el_sub.textContent='Slėgis sparčiai kyla'; }
-  else if (score >= 1)  { el_emoji.textContent='🌤️'; el_text.textContent='GERĖJA';            el_text.style.color='#07e000'; el_sub.textContent='Oras turėtų pagerėti'; }
-  else if (score === 0) { el_emoji.textContent='🌥️'; el_text.textContent='STABILUS';          el_text.style.color='#aaa';    el_sub.textContent='Didelių pokyčių nesitikima'; }
+  if      (score >= 3)  { el_emoji.textContent=night?'🌙':'☀️';  el_text.textContent='PUIKUS ORAS';       el_text.style.color='#f1c40f'; el_sub.textContent='Slėgis sparčiai kyla'; }
+  else if (score >= 1)  { el_emoji.textContent=night?'🌙':'🌤️'; el_text.textContent='GERĖJA';            el_text.style.color='#07e000'; el_sub.textContent='Oras turėtų pagerėti'; }
+  else if (score === 0) { el_emoji.textContent=night?'☁️':'🌥️'; el_text.textContent='STABILUS';          el_text.style.color='#aaa';    el_sub.textContent='Didelių pokyčių nesitikima'; }
   else if (score >= -2) { el_emoji.textContent='🌧️'; el_text.textContent='BLOGĖJA';           el_text.style.color='#f39c12'; el_sub.textContent='Tikėtini krituliai'; }
   else if (score >= -3) { el_emoji.textContent='⛈️'; el_text.textContent='TIKĖTINAS LIETUS';  el_text.style.color='#e67e22'; el_sub.textContent='Didėjanti lietaus tikimybė'; }
   else                  { el_emoji.textContent='🌩️'; el_text.textContent='BLOGŲ ORŲ GRĖSMĖ'; el_text.style.color='#e74c3c'; el_sub.textContent='Slėgis sparčiai krenta!'; }
