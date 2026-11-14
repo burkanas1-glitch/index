@@ -644,7 +644,17 @@ function calcLocalForecast(feeds) {
     if (tNow <= 0)      { pEmoji='❄️';  pWord='SNIEGAS'; }
     else if (tNow <= 2) { pEmoji='🌨️'; pWord='ŠLAPDRIBA'; }
   }
-  if      (score >= 3)  { el_emoji.textContent=night?'🌙':'☀️';  el_text.textContent='PUIKUS ORAS';       el_text.style.color='#f1c40f'; el_sub.textContent='Slėgis sparčiai kyla'; }
+  // Dabartinė lauko drėgmė: ≥90% = debesuota/drėgna, net jei slėgis kyla (po lietaus fronto)
+  const hNow = hm ? hm.newest : null;
+  const wet = hNow !== null && hNow >= 90;
+  if (wet && score >= 0) {
+    const raining = hNow >= 96;
+    el_emoji.textContent = raining ? pEmoji : '☁️';
+    el_text.textContent  = raining ? 'DRĖGNA · KRITULIAI GALIMI' : 'DEBESUOTA, DRĖGNA';
+    el_text.style.color  = '#8ab4d8';
+    el_sub.textContent   = pr.diff > 1 ? 'Slėgis kyla, bet oras dar drėgnas' : 'Didelė drėgmė lauke';
+  }
+  else if (score >= 3)  { el_emoji.textContent=night?'🌙':'☀️';  el_text.textContent='PUIKUS ORAS';       el_text.style.color='#f1c40f'; el_sub.textContent='Slėgis sparčiai kyla'; }
   else if (score >= 1)  { el_emoji.textContent=night?'🌙':'🌤️'; el_text.textContent='GERĖJA';            el_text.style.color='#07e000'; el_sub.textContent='Oras turėtų pagerėti'; }
   else if (score === 0) { el_emoji.textContent=night?'☁️':'🌥️'; el_text.textContent='STABILUS';          el_text.style.color='#aaa';    el_sub.textContent='Didelių pokyčių nesitikima'; }
   else if (score >= -2) { el_emoji.textContent=pEmoji; el_text.textContent='BLOGĖJA';           el_text.style.color='#f39c12'; el_sub.textContent='Tikėtini krituliai'; }
