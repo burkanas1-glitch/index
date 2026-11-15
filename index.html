@@ -668,7 +668,12 @@ function calcLocalForecast(feeds) {
   else if (score >= 3)  { el_emoji.textContent=night?'🌙':'☀️';  el_text.textContent='PUIKUS ORAS';       el_text.style.color='#f1c40f'; el_sub.textContent='Slėgis sparčiai kyla'; }
   else if (score >= 1)  { el_emoji.textContent=night?'🌙':'🌤️'; el_text.textContent='GERĖJA';            el_text.style.color='#07e000'; el_sub.textContent='Oras turėtų pagerėti'; }
   else if (score === 0) { el_emoji.textContent=night?'☁️':'🌥️'; el_text.textContent='STABILUS';          el_text.style.color='#aaa';    el_sub.textContent='Didelių pokyčių nesitikima'; }
-  else if (score >= -2) { el_emoji.textContent=pEmoji; el_text.textContent='BLOGĖJA';           el_text.style.color='#f39c12'; el_sub.textContent='Tikėtini krituliai'; }
+  else if (score >= -2 && !(score <= -2 && hNow !== null && hNow >= 85)) {
+    // Silpnas slėgio kritimas – dar ne lietus (giedrą naktį dažnai būna tas pats)
+    el_emoji.textContent=night?'☁️':'🌥️'; el_text.textContent='KEIČIASI ORAS'; el_text.style.color='#f39c12';
+    el_sub.textContent='Slėgis krenta – galimi debesys, bet krituliai dar nesimato';
+  }
+  else if (score >= -2) { el_emoji.textContent=pEmoji; el_text.textContent='BLOGĖJA';           el_text.style.color='#f39c12'; el_sub.textContent='Slėgis krenta ir drėgna – tikėtini krituliai'; }
   else if (score >= -3) { el_emoji.textContent=pEmoji; el_text.textContent='TIKĖTINAS '+pWord;  el_text.style.color='#e67e22'; el_sub.textContent='Didėjanti lietaus tikimybė'; }
   else                  { el_emoji.textContent=(tNow!==null && tNow<=2)?pEmoji:'🌩️'; el_text.textContent='BLOGŲ ORŲ GRĖSMĖ'; el_text.style.color='#e74c3c'; el_sub.textContent='Slėgis sparčiai krenta!'; }
 
