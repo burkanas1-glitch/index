@@ -648,11 +648,22 @@ function calcLocalForecast(feeds) {
   const hNow = hm ? hm.newest : null;
   const wet = hNow !== null && hNow >= 90;
   if (wet && score >= 0) {
-    const raining = hNow >= 96;
-    el_emoji.textContent = raining ? pEmoji : '☁️';
-    el_text.textContent  = raining ? 'DRĖGNA · KRITULIAI GALIMI' : 'DEBESUOTA, DRĖGNA';
-    el_text.style.color  = '#8ab4d8';
-    el_sub.textContent   = pr.diff > 1 ? 'Slėgis kyla, bet oras dar drėgnas' : 'Didelė drėgmė lauke';
+    // Didelė drėgmė pati nereiškia kritulių (naktį giedrą irgi būna ~100%: rasa, rūkas)
+    const clouds = (typeof window._owmClouds === 'number') ? window._owmClouds : null;
+    if (clouds !== null && clouds < 40) {
+      el_emoji.textContent = night ? '🌙' : '🌤️';
+      el_text.textContent  = 'GIEDRA, DRĖGNA';
+      el_sub.textContent   = 'Daug drėgmės lauke – tikėtina rasa ar rūkas';
+    } else if (hNow >= 96) {
+      el_emoji.textContent = '🌫️';
+      el_text.textContent  = 'LABAI DRĖGNA';
+      el_sub.textContent   = 'Rasa, rūkas ar krituliai – slėgis nekrenta';
+    } else {
+      el_emoji.textContent = '💧';
+      el_text.textContent  = 'DRĖGNA';
+      el_sub.textContent   = pr.diff > 1 ? 'Slėgis kyla, bet oras dar drėgnas' : 'Didelė drėgmė lauke';
+    }
+    el_text.style.color = '#8ab4d8';
   }
   else if (score >= 3)  { el_emoji.textContent=night?'🌙':'☀️';  el_text.textContent='PUIKUS ORAS';       el_text.style.color='#f1c40f'; el_sub.textContent='Slėgis sparčiai kyla'; }
   else if (score >= 1)  { el_emoji.textContent=night?'🌙':'🌤️'; el_text.textContent='GERĖJA';            el_text.style.color='#07e000'; el_sub.textContent='Oras turėtų pagerėti'; }
@@ -676,6 +687,7 @@ async function fetchOWM() {
     document.getElementById('owmFeels').textContent = 'Junta kaip: '+(d1.main.feels_like>0?'+':'')+d1.main.feels_like.toFixed(0)+'°C';
     document.getElementById('owmIcon').textContent = owmEmoji(d1.weather[0].icon);
     window._owmIcon = d1.weather[0].icon;
+    window._owmClouds = d1.clouds ? d1.clouds.all : null;
     if (d1.sys && d1.sys.sunrise && d1.sys.sunset) _sun = { rise: d1.sys.sunrise, set: d1.sys.sunset };
     document.getElementById('owmHumi').textContent = d1.main.humidity+'%';
     document.getElementById('owmWind').textContent = d1.wind.speed.toFixed(1)+' m/s';
